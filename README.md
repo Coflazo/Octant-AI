@@ -76,6 +76,12 @@ docker-compose up --build
 ```
 > The React Dashboard triggers on `http://localhost:3000` while `FastAPI` scales background threads over `:8000`.
 
+### 3. Dust Orchestration Setup
+To execute the backend application exclusively as a Dust.tt autonomous agent workflow:
+1. Initialize a new Dust App inside your Dust.tt workspace.
+2. Import the included `dust_workflow.json` blueprint into the Actions visual graph.
+3. Ensure the `A1` trigger webhook targets your active `POST /api/pipeline/start` FastAPI endpoint bounds.
+
 ## 🎤 Demo Thesis Example
 
 > _"Given extreme monetary tightening phases, heavily shorted components in the consumer discretionary sector exhibit excessive drawdown resilience yielding mathematically exploitable structural alpha relative to baseline Fama-French bounds."_
