@@ -1,14 +1,14 @@
 """
 Octant AI — Data Fetcher: Market Prices
 
-Provides the YFinanceFetcher class for pulling adjusted close prices
-from Yahoo Finance. Handles missing data via forward-fill and back-fill
-to ensure continuous time series for the quantitative models.
+Provides the PriceFetcher class for universe construction, OHLCV data fetching,
+liquidity screening, and log return computation using yfinance.
 """
 
 import asyncio
 import logging
-from typing import List
+import numpy as np
+from typing import Dict, List, Optional
 
 import pandas as pd
 import yfinance as yf
@@ -16,106 +16,139 @@ import yfinance as yf
 logger = logging.getLogger(__name__)
 
 
-class YFinanceFetcher:
-    """Historical price fetcher using the yfinance library.
-    
-    Pulls daily adjusted close prices, standardises the resulting DataFrame,
-    and handles missing/NaN market data so that downstream matrix operations
-    and vectorised backtesting engines do not fail.
-    """
+class PriceFetcher:
+    """Historical price fetcher and screener using the yfinance library."""
 
-    async def fetch_prices(
-        self, tickers: List[str], start_date: str, end_date: str, frequency: str = "1d"
-    ) -> pd.DataFrame:
-        """Fetch cleaned adjusted close prices for a list of tickers.
-
-        Downloads the market data window, extracts the 'Adj Close' column
-        (falling back to 'Close' if unavailable), and applies standard data
-        imputation (ffill then bfill).
+    async def fetch_universe_tickers(
+        self, exchanges: List[str], sector: Optional[str], max_tickers: int
+    ) -> List[str]:
+        """Fetch a list of candidate tickers for the given exchanges and sector.
 
         Args:
-            tickers: List of ticker symbols (e.g., ["AAPL", "MSFT"]).
-            start_date: Start date string (YYYY-MM-DD).
-            end_date: End date string (YYYY-MM-DD).
-            frequency: Data frequency string (e.g., "1d", "1wk").
+            exchanges: Target exchange codes.
+            sector: Optional sector filter.
+            max_tickers: Maximum number of candidate tickers to return.
 
         Returns:
-            A pandas DataFrame aligned by trading day (index), where each
-            column represents a ticker's adjusted close price over time.
+            A list of ticker symbols.
         """
-        if not tickers:
-            return pd.DataFrame()
-
         logger.info(
-            "Fetching %s prices for %d tickers from %s to %s",
-            frequency,
-            len(tickers),
-            start_date,
-            end_date,
+            "Fetching universe tickers for exchanges=%s, sector=%s, max=%d",
+            exchanges, sector, max_tickers
         )
+        # Note: yfinance has no native multi-exchange stock screener. 
+        # In production this would query a proper screener API.
+        # We provide a hardcoded starter universe mimicking the top S&P/Nasdaq equivalents.
+        base_universe = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "BRK-B", "TSLA", "UNH", "JNJ", "XOM", "JPM", "V"]
+        
+        # Sector mock filtering if requested
+        if sector and sector.lower() == "energy":
+            base_universe = ["XOM", "CVX", "COP", "SLB", "EOG", "OXY"]
+        elif sector and "tech" in sector.lower():
+            base_universe = ["AAPL", "MSFT", "GOOGL", "NVDA", "AMD"]
+            
+        return base_universe[:max_tickers]
 
-        try:
-            # yfinance network calls are synchronous, so we run them in a thread
-            # to avoid blocking the main FastAPI event loop. threads=True uses
-            # concurrent extraction inside yf itself.
-            df = await asyncio.to_thread(
-                yf.download,
+    async def fetch_ohlcv(
+        self, tickers: List[str], start_date: str, end_date: str
+    ) -> Dict[str, pd.DataFrame]:
+        """Fetch OHLCV data with handling for splits and dividends.
+
+        Downloads with auto_adjust=True. Handles missing data by forward-filling
+        then dropping remaining leading NaNs.
+
+        Args:
+            tickers: List of symbol strings.
+            start_date: Start date (YYYY-MM-DD).
+            end_date: End date (YYYY-MM-DD).
+
+        Returns:
+            Dict mapping ticker symbol to its OHLCV DataFrame.
+        """
+        logger.info("Fetching OHLCV for %d tickers from %s to %s", len(tickers), start_date, end_date)
+        if not tickers:
+            return {}
+
+        def _fetch_sync():
+            df = yf.download(
                 tickers=tickers,
                 start=start_date,
                 end=end_date,
-                interval=frequency,
-                group_by="column",
-                auto_adjust=False,
+                auto_adjust=True,
+                group_by="ticker",
                 threads=True,
                 progress=False,
             )
+            return df
 
-            if df.empty:
-                logger.warning("yfinance returned an empty DataFrame.")
-                return pd.DataFrame()
-
-            # Multi-ticker downloads return a MultiIndex (Price->Ticker),
-            # Single-ticker returns simple columns.
-            is_multi = isinstance(df.columns, pd.MultiIndex)
-            price_col = None
-
-            if is_multi:
-                if "Adj Close" in df.columns.levels[0]:
-                    price_col = "Adj Close"
-                elif "Close" in df.columns.levels[0]:
-                    price_col = "Close"
-            else:
-                if "Adj Close" in df.columns:
-                    price_col = "Adj Close"
-                elif "Close" in df.columns:
-                    price_col = "Close"
-
-            if not price_col:
-                logger.error("No valid price columns found in yfinance response.")
-                return pd.DataFrame()
-            
-            if price_col == "Close":
-                logger.warning("Adj Close not found, falling back to unadjusted Close.")
-
-            # Extract just the targeted price data
-            prices = df[price_col]
-
-            # If only 1 ticker was requested, 'prices' is a pd.Series.
-            # We promote it to a DataFrame to maintain the contract.
-            if isinstance(prices, pd.Series):
-                prices = prices.to_frame(name=tickers[0])
-
-            # ── Data Imputation ───────────────────────────────────────
-            # Forward-fill carries the last valid observation forward (e.g., holidays).
-            # Backward-fill catches leading NaNs at the start of the required period.
-            cleaned_prices = prices.ffill().bfill()
-
-            logger.info("Fetched and cleaned prices for %d assets.", cleaned_prices.shape[1])
-            return cleaned_prices
-
+        try:
+            raw_data = await asyncio.to_thread(_fetch_sync)
         except Exception as exc:
-            logger.error(
-                "Failed to fetch prices from yfinance: %s", str(exc), exc_info=True
-            )
-            # Re-raise so the orchestrator can catch and emit an error PULSE
-            raise
+            logger.error("yfinance download failed: %s", exc)
+            return {}
+
+        result_dict = {}
+        if len(tickers) == 1:
+            # Single ticker returns standard 2D Frame (Columns: Open, High, etc)
+            ticker = tickers[0]
+            clean_df = raw_data.ffill().dropna()
+            result_dict[ticker] = clean_df
+        else:
+            # Multi-ticker returns MultiIndex columns (Ticker -> Open, High, etc)
+            for ticker in tickers:
+                if ticker in raw_data.columns.levels[0]:
+                    ticker_df = raw_data[ticker].copy()
+                    ticker_df = ticker_df.ffill().dropna()
+                    result_dict[ticker] = ticker_df
+
+        return result_dict
+
+    def apply_liquidity_screen(
+        self, price_data: Dict[str, pd.DataFrame], min_avg_volume: int = 500000, min_price: float = 1.0
+    ) -> Dict[str, pd.DataFrame]:
+        """Removes tickers failing minimum volume and price criteria.
+
+        Args:
+            price_data: Dict of ticker -> OHLCV DataFrame.
+            min_avg_volume: Minimum average daily volume required.
+            min_price: Minimum closing price required across the period.
+
+        Returns:
+            Filtered dict of price_data.
+        """
+        logger.info("Applying liquidity screen (Vol > %d, Price > %.2f)", min_avg_volume, min_price)
+        filtered = {}
+        for ticker, df in price_data.items():
+            if df.empty or "Volume" not in df.columns or "Close" not in df.columns:
+                continue
+                
+            avg_vol = df["Volume"].mean()
+            min_px = df["Close"].min()
+            
+            if avg_vol >= min_avg_volume and min_px >= min_price:
+                filtered[ticker] = df
+            else:
+                logger.debug("Ticker %s failed screen: Vol=%d, MinPx=%.2f", ticker, avg_vol, min_px)
+                
+        logger.info("Liquidity screen passed %d/%d tickers", len(filtered), len(price_data))
+        return filtered
+
+    def compute_log_returns(self, price_data: Dict[str, pd.DataFrame]) -> Dict[str, pd.Series]:
+        """Compute logarithmic returns from closing prices.
+
+        R_t = ln(P_t / P_{t-1})
+
+        Args:
+            price_data: Dict of ticker -> OHLCV DataFrame.
+
+        Returns:
+            Dict mapping ticker to its log returns Series.
+        """
+        returns_dict = {}
+        for ticker, df in price_data.items():
+            if "Close" in df.columns:
+                close = df["Close"]
+                # ln(P_t / P_{t-1})
+                log_ret = np.log(close / close.shift(1))
+                returns_dict[ticker] = log_ret.dropna()
+        return returns_dict
