@@ -1,0 +1,42 @@
+{
+  "name": "Octant AI Dust Pipeline",
+  "description": "5-agent sequence for autonomous quantitative research",
+  "version": "1.0",
+  "agents": [
+    {
+      "id": "hypothesis_engine",
+      "model": "google/gemini-2.5-pro",
+      "description": "Decomposes unstructured natural language into strictly quantitative sub-hypotheses.",
+      "timeout_sec": 45,
+      "max_retries": 1
+    },
+    {
+      "id": "literature",
+      "model": "google/gemini-flash",
+      "description": "Searches SSNR, CORE, arXiv and evaluates abstract relevance to the hypotheses.",
+      "timeout_sec": 60,
+      "max_retries": 3
+    },
+    {
+      "id": "universe",
+      "model": "google/gemini-flash",
+      "description": "Applies sector, liquidity, and sentiment logic to construct an equity universe from given exchanges.",
+      "timeout_sec": 30,
+      "max_retries": 2
+    },
+    {
+      "id": "backtest",
+      "model": "google/gemini-2.5-pro",
+      "description": "Selects appropriate mathematical models and parameterises the vectorised backtester.",
+      "timeout_sec": 90,
+      "max_retries": 1
+    },
+    {
+      "id": "architect",
+      "model": "google/gemini-2.5-pro",
+      "description": "Synthesises numerical results, metrics, and citations into an IMRaD LaTeX report stream.",
+      "timeout_sec": 120,
+      "max_retries": 0
+    }
+  ]
+}
