@@ -66,3 +66,4 @@ pytest-cov==6.0.0
 feedparser==6.0.11
 chromadb==0.4.24
 playwright==1.42.0
+PyMuPDF==1.25.3
