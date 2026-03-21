@@ -14,6 +14,8 @@ from scipy.stats import norm
 logger = logging.getLogger(__name__)
 
 
+
+
 # --- Dataclasses ---
 
 @dataclass
@@ -37,6 +39,10 @@ class OUParams:
 
 
 
+
+
+
+
 # --- Fitting ---
 
 def fit_gbm(prices: pd.Series, dt: float = 1/252) -> Optional[GBMParams]:
@@ -49,6 +55,8 @@ def fit_gbm(prices: pd.Series, dt: float = 1/252) -> Optional[GBMParams]:
         mu_iter = log_returns.mean() / dt
         sigma_iter = log_returns.std() / np.sqrt(dt)
         
+                
+                
                 
         # Correct drift for Itô's Lemma: true mu = sample drift + 0.5*sigma^2
         mu_true = mu_iter + 0.5 * sigma_iter**2
@@ -66,9 +74,11 @@ def fit_merton_jumps(returns: pd.Series, cond_vol: pd.Series, dt: float = 1/252)
 
     try:
         R = df.iloc[:, 0]
-                # Using 3 * scaled conditional volatility
+                                # Using 3 * scaled conditional volatility
         vol = df.iloc[:, 1]
         
+                
+                
                 
         # Determine jump days
         is_jump = np.abs(R) > (3 * vol)
@@ -109,12 +119,16 @@ def fit_ou_process(spread: pd.Series, dt: float = 1/252) -> Optional[OUParams]:
         X_t_minus_1 = X[:-1]
         
                 
+                
+                
         # OLS regression
         A = np.vstack([np.ones_like(X_t_minus_1), X_t_minus_1]).T
         res = np.linalg.lstsq(A, X_t - X_t_minus_1, rcond=None)
         alpha, beta = res[0]
         residuals = (X_t - X_t_minus_1) - (alpha + beta * X_t_minus_1)
         
+                
+                
                 
         # Catch non-mean-reverting scenarios
         if beta >= 0 or beta <= -1:
@@ -124,6 +138,8 @@ def fit_ou_process(spread: pd.Series, dt: float = 1/252) -> Optional[OUParams]:
         kappa = -np.log(1 + beta) / dt
         theta = -alpha / beta
         
+                
+                
                 
         # Sigma derived from discrete error variance
         var_eps = np.var(residuals, ddof=1)
@@ -139,25 +155,31 @@ def fit_ou_process(spread: pd.Series, dt: float = 1/252) -> Optional[OUParams]:
 
 
 
+
+
+
+
 # --- Simulation ---
 
 def simulate_gbm_paths(params: GBMParams, n_paths: int, n_steps: int, dt: float = 1/252) -> np.ndarray:
     """generates an array of n_paths x n_steps standard gbm asset price paths lol"""
     try:
-                # standard normal shocks
+                                # standard normal shocks
         Z = np.random.standard_normal((n_paths, n_steps))
         
         drift = (params.mu - 0.5 * params.sigma**2) * dt
         diffusion = params.sigma * np.sqrt(dt) * Z
         
                 
+                
+                
         # S(t+1) = S(t) * exp(drift + diffusion)
-                # We model log-returns to compute cumsum efficiently, starting at S(0)=1.0
+                                # We model log-returns to compute cumsum efficiently, starting at S(0)=1.0
         log_increments = drift + diffusion
         log_paths = np.cumsum(log_increments, axis=1)
         
         paths = np.exp(log_paths)
-                # Prepend initial state 1.0
+                                # Prepend initial state 1.0
         start = np.ones((n_paths, 1))
         return np.hstack((start, paths))
     except Exception as e:
@@ -172,16 +194,22 @@ def simulate_merton_paths(
         Z = np.random.standard_normal((n_paths, n_steps))
         
                 
+                
+                
         # Poisson jump process
-                # Expect lambda_j * dt jumps per step.
+                                # Expect lambda_j * dt jumps per step.
         poi_probs = merton.lambda_j * dt
-                # Random matrix determining if a jump occurs (0 or 1 approximate for small dt)
+                                # Random matrix determining if a jump occurs (0 or 1 approximate for small dt)
         jumps = np.random.binomial(n=1, p=poi_probs, size=(n_paths, n_steps))
         
+                
+                
                 
         # Jump sizes N(mu_j, sigma_j^2)
         jump_sizes = np.random.normal(merton.mu_j, merton.sigma_j, size=(n_paths, n_steps))
         
+                
+                
                 
         # Merton compensator to maintain neutral drift expectations
         k_bar = np.exp(merton.mu_j + 0.5 * merton.sigma_j**2) - 1
@@ -207,6 +235,8 @@ def _nearest_pd(A: np.ndarray) -> np.ndarray:
     A2 = (B + H) / 2
     A3 = (A2 + A2.T) / 2
     
+        
+        
         
     # Check if PD
     if _is_pd(A3):
@@ -236,6 +266,8 @@ def compute_correlated_paths(
     n_assets = len(means)
     
         
+        
+        
     # Ensure covariance matrix is positive definite
     if not _is_pd(cov_matrix):
         cov_matrix = _nearest_pd(cov_matrix)
@@ -244,17 +276,23 @@ def compute_correlated_paths(
         L = np.linalg.cholesky(cov_matrix)
         
                 
+                
+                
         # We need independent standards: shape (n_paths, n_steps, n_assets)
         Z = np.random.standard_normal((n_paths, n_steps, n_assets))
         
                 
+                
+                
         # Transform to correlated steps: Z_corr = Z * L^T  (broadcasted)
-                # Using tensordot or einsum for clarity
+                                # Using tensordot or einsum for clarity
         Z_corr = np.einsum('psa, ab -> psb', Z, L.T)
         
         paths = np.zeros((n_paths, n_steps + 1, n_assets))
         paths[:, 0, :] = 1.0  # Initialised to price 1.0 
         
+                
+                
                 
         # S(t+1) = S(t) * exp( (mu - sigma^2/2)dt + Z_corr * sqrt(dt) )
         sigs2 = np.diag(cov_matrix)

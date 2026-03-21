@@ -65,8 +65,8 @@ class HypothesisEngine:
             logger.warning("GEMINI_API_KEY not found in environment.")
 
         genai.configure(api_key=settings.GEMINI_API_KEY)
-                # Using Gemini 1.5 Pro (as 2.5 Pro isn't GA in all SDKs yet, 
-                # but configured as requested. We fallback if needed)
+                                # Using Gemini 1.5 Pro (as 2.5 Pro isn't GA in all SDKs yet, 
+                                # but configured as requested. We fallback if needed)
         self.model = genai.GenerativeModel(
             model_name="models/gemini-1.5-pro",
             generation_config={"response_mime_type": "application/json"}
@@ -135,6 +135,8 @@ class HypothesisEngine:
         logger.info("Agent 1: Decomposing thesis — session=%s", self.session_id)
 
         
+        
+        
         # 1. Inform the user we are starting
         await self.pulse.emit_status(
             agent="hypothesis_engine",
@@ -150,15 +152,17 @@ class HypothesisEngine:
         prompt = self._build_prompt(thesis_str, exchanges, sector_filter)
 
         try:
-                        # 2. Call Gemini API
-                        # Note: generate_content is synchronous in the SDK, so we run it async
+                                                # 2. Call Gemini API
+                                                # Note: generate_content is synchronous in the SDK, so we run it async
             import asyncio
             response = await asyncio.to_thread(self.model.generate_content, prompt)
 
             
+            
+            
             # 3. Parse output
             response_text = response.text.strip()
-                        # Clean potential markdown if the model hallucinated backticks despite prompt
+                                                # Clean potential markdown if the model hallucinated backticks despite prompt
             if response_text.startswith("```json"):
                 response_text = response_text[7:]
             if response_text.endswith("```"):
@@ -168,6 +172,8 @@ class HypothesisEngine:
             if not isinstance(raw_hypotheses, list):
                 raise ValueError("Expected a JSON array from the LLM.")
 
+            
+            
             
             # Validate structural integrity via Pydantic
             validated_hypotheses = [HypothesisObject(**item) for item in raw_hypotheses]
@@ -179,11 +185,15 @@ class HypothesisEngine:
             )
 
             
+            
+            
             # 4. Push results to UI sequentially
             for hyp in validated_hypotheses:
                 await self.pulse.emit_hypothesis_card(hyp.model_dump())
                 await asyncio.sleep(0.3)  # slight delay for UI staggered animation
 
+            
+            
             
             # 5. Signal completion
             await self.pulse.emit_status(

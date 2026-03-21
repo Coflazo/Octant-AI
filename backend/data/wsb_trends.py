@@ -54,7 +54,7 @@ class WSBTrendsClient:
                 return {}
 
             data = json.loads(output_str)
-                        # Ensure it fits dict[str, int]
+                                                # Ensure it fits dict[str, int]
             return {str(k): int(v) for k, v in data.items()}
 
         except Exception as exc:

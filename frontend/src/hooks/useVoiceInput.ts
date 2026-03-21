@@ -18,6 +18,8 @@ export function useVoiceInput(): UseVoiceInputResult {
   const socketRef = useRef<WebSocket | null>(null);
 
   
+  
+  
   // Clean up all resources
   const cleanup = useCallback(() => {
     if (mediaRecorder.current && mediaRecorder.current.state !== "inactive") {
@@ -38,6 +40,8 @@ export function useVoiceInput(): UseVoiceInputResult {
   }, []);
 
   
+  
+  
   // Cleanup on unmount
   useEffect(() => {
     return cleanup;
@@ -49,13 +53,17 @@ export function useVoiceInput(): UseVoiceInputResult {
       setIsConnecting(true);
 
       
+      
+      
       // 1. Request microphone permissions
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
 
       
+      
+      
       // 2. Open dedicated WebSocket for voice chunk streaming
-            // (The main PULSE socket is for downstream events, this handles upstream binary)
+                        // (The main PULSE socket is for downstream events, this handles upstream binary)
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const host = window.location.host; // Handled by Vite proxy in dev
       const wsUrl = `${protocol}//${host}/api/voice/transcribe/${sessionId}`;
@@ -64,16 +72,20 @@ export function useVoiceInput(): UseVoiceInputResult {
       socketRef.current = socket;
 
       
+      
+      
       // Ensure binary payloads are treated as array buffers or blobs
       socket.binaryType = "blob";
 
       const connectionPromise = new Promise((resolve, reject) => {
         socket.onopen = () => resolve(true);
-        socket.onerror = (e) => reject(new Error("WebSocket connection failed"));
+        socket.onerror = () => reject(new Error("WebSocket connection failed"));
       });
 
       await connectionPromise;
 
+      
+      
       
       // 3. Configure MediaRecorder for 250ms chunks
       const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
@@ -87,12 +99,14 @@ export function useVoiceInput(): UseVoiceInputResult {
 
       recorder.onstop = () => {
         if (socket.readyState === WebSocket.OPEN) {
-                    // Explicit end-of-speech signal so backend knows to flush
+                                        // Explicit end-of-speech signal so backend knows to flush
           socket.send(JSON.stringify({ text: "stop" }));
           socket.close();
         }
       };
 
+      
+      
       
       // Start recording and pushing chunks every 250ms
       recorder.start(250);

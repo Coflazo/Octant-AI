@@ -37,10 +37,14 @@ async def voice_transcription_endpoint(websocket: WebSocket, session_id: str) ->
     client = Reson8Client()
 
     
+    
+    
     # Communication queues for the duplex stream
     audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
     finalise_event = asyncio.Event()
 
+    
+    
     
     # Track silence duration via chunk counts (e.g., eight 250ms chunks = 2.0s)
     consecutive_silent_chunks = 0
@@ -57,19 +61,21 @@ async def voice_transcription_endpoint(websocket: WebSocket, session_id: str) ->
                     await audio_queue.put(chunk)
 
                     
+                    
+                    
                     # Check for end-of-speech
                     if client.detect_silence(chunk):
                         consecutive_silent_chunks += 1
                         if consecutive_silent_chunks >= SILENCE_CHUNK_LIMIT:
                             logger.info("2-second silence detected, finalising dictation — session=%s", session_id)
                             finalise_event.set()
-                                                        # Close the upstream generator queue
+                                                                                                                # Close the upstream generator queue
                             await audio_queue.put(b"")
                     else:
                         consecutive_silent_chunks = 0
 
                 elif "text" in message:
-                                        # Client can explicitly send "stop" to end dictation
+                                                                                # Client can explicitly send "stop" to end dictation
                     if message["text"] == "stop":
                         finalise_event.set()
                         await audio_queue.put(b"")
@@ -98,12 +104,14 @@ async def voice_transcription_endpoint(websocket: WebSocket, session_id: str) ->
             async for text_fragment in client.transcribe_stream(_audio_iterator()):
                 if text_fragment:
                     cumulative_text.append(text_fragment)
-                                        # Emit partial words back on the main PULSE socket
+                                                                                # Emit partial words back on the main PULSE socket
                     await pulse.emit_transcription(
                         text=" ".join(cumulative_text),
                         is_final=False
                     )
 
+            
+            
             
             # When stream ends natively or via silence cutoff, emit final output
             final_transcript = " ".join(cumulative_text).strip()
@@ -123,7 +131,7 @@ async def voice_transcription_endpoint(websocket: WebSocket, session_id: str) ->
             )
 
     try:
-                # Run producer and consumer concurrently
+                                # Run producer and consumer concurrently
         await asyncio.gather(
             _audio_producer(),
             _transcription_consumer()

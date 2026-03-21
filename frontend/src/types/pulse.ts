@@ -8,6 +8,8 @@
  */
 
 
+
+
 // ── Agent identifiers (one per pipeline stage) ──────────────────────────
 
 export type AgentName =
@@ -18,9 +20,13 @@ export type AgentName =
   | "architect";
 
 
+
+
 // ── Status lifecycle states ─────────────────────────────────────────────
 
 export type PulseStatus = "pending" | "active" | "complete" | "error";
+
+
 
 
 // ── Payload type discriminator ──────────────────────────────────────────
@@ -37,6 +43,8 @@ export type PayloadType =
   | "error";
 
 
+
+
 // ── Progress tracker ────────────────────────────────────────────────────
 
 export interface PulseProgress {
@@ -47,12 +55,16 @@ export interface PulseProgress {
 }
 
 
+
+
 // ── Display message ─────────────────────────────────────────────────────
 
 export interface PulseMessage {
   title: string;
   subtitle: string;
 }
+
+
 
 
 // ── Hypothesis Card Payload ─────────────────────────────────────────────
@@ -79,6 +91,8 @@ export interface HypothesisCard {
 }
 
 
+
+
 // ── Citation Card Payload ───────────────────────────────────────────────
 
 export interface CitationCard {
@@ -102,6 +116,8 @@ export interface CitationCard {
 }
 
 
+
+
 // ── Ticker Card Payload ─────────────────────────────────────────────────
 
 export interface TickerCard {
@@ -119,17 +135,23 @@ export interface TickerCard {
 }
 
 
+
+
 // ── Metric Result Payload ───────────────────────────────────────────────
 
 export interface MetricResult {
   hypothesis_id: string;
 
   
+  
+  
   // Return metrics
   total_return: number;
   cagr: number;
   annualised_excess_return: number;
 
+  
+  
   
   // Risk metrics
   annualised_vol: number;
@@ -138,12 +160,16 @@ export interface MetricResult {
   calmar_ratio: number;
 
   
+  
+  
   // Risk-adjusted
   sharpe_ratio: number;
   sortino_ratio: number;
   information_ratio: number;
   omega_ratio: number;
 
+  
+  
   
   // Statistical
   t_statistic: number;
@@ -155,21 +181,29 @@ export interface MetricResult {
   bayes_adjusted_sharpe: number;
 
   
+  
+  
   // Transaction cost sensitivity
   breakeven_cost_bps: number;
   return_at_2bps: number;
   return_at_10bps: number;
 
   
+  
+  
   // Volatility
   garch_persistence: number;
   vol_regime_fraction_high: number;
 
   
+  
+  
   // Sentiment
   sentiment_factor_loading: number | null;
   sentiment_factor_t_stat: number | null;
 }
+
+
 
 
 // ── Report Section Payload ──────────────────────────────────────────────
@@ -181,12 +215,16 @@ export interface ReportSection {
 }
 
 
+
+
 // ── Transcription Payload ───────────────────────────────────────────────
 
 export interface TranscriptionPayload {
   text: string;
   is_final: boolean;
 }
+
+
 
 
 // ── Error Payload ───────────────────────────────────────────────────────
@@ -197,6 +235,8 @@ export interface ErrorPayload {
   traceback: string;
   recovery_action: string | null;
 }
+
+
 
 
 // ── Union of all payload shapes ─────────────────────────────────────────
@@ -212,6 +252,8 @@ export type PulsePayload =
   | Record<string, unknown>; // fallback for "status" events with freeform data
 
 
+
+
 // ── Top-level PULSE event envelope ──────────────────────────────────────
 
 export interface PulseEvent {
@@ -224,6 +266,8 @@ export interface PulseEvent {
   message: PulseMessage;
   timestamp: string;
 }
+
+
 
 
 // ── Exchange supported by Universe Builder ──────────────────────────────
@@ -261,6 +305,8 @@ export const EXCHANGES: ExchangeInfo[] = [
 ];
 
 
+
+
 // ── Pipeline request shape (mirrors backend PipelineRequest) ────────────
 
 export interface PipelineRequest {
@@ -275,6 +321,8 @@ export interface PipelineRequest {
 }
 
 
+
+
 // ── Pipeline status (mirrors backend SessionState) ──────────────────────
 
 export type PipelineStatus =
@@ -285,12 +333,16 @@ export type PipelineStatus =
   | "error";
 
 
+
+
 // ── Significance labels ─────────────────────────────────────────────────
 
 export type SignificanceLabel =
   | "strongly significant"
   | "significant"
   | "not significant";
+
+
 
 
 // ── Top-level application state ─────────────────────────────────────────

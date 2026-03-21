@@ -16,6 +16,8 @@ async def check_dependencies():
     checks = []
     
         
+        
+        
     # pdflatex check
     t0 = time.time()
     pdf_bin = shutil.which("pdflatex")
@@ -25,6 +27,8 @@ async def check_dependencies():
         "latency_ms": round((time.time() - t0) * 1000, 2)
     })
     
+        
+        
         
     # Dummy async check for APIs (Mocking external ping)
     t0 = time.time()

@@ -36,13 +36,17 @@ class SSRNScraper:
             return papers
         
                 
+                
+                
         # Searching SSRN dynamically often requires interacting with their JS frontend
-                # and navigating captchas.
+                                # and navigating captchas.
         try:
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
                 page = await browser.new_page()
                 
+                                
+                                
                                 
                 # Mock the navigation flow to prevent IP bans during normal testing
                 await page.goto("https://papers.ssrn.com/sol3/DisplayAbstractSearch.cfm", wait_until="domcontentloaded")

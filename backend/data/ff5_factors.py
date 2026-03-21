@@ -15,6 +15,10 @@ logger = logging.getLogger(__name__)
 
 
 
+
+
+
+
 # Standard Ken French data library URL for 5-Factor daily
 FF5_URL = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_5_Factors_2x3_daily_CSV.zip"
 
@@ -49,11 +53,13 @@ async def fetch_ff5_factors(start_date: str, end_date: str) -> pd.DataFrame:
             try:
                 response = urllib.request.urlopen(FF5_URL)
                 with zipfile.ZipFile(io.BytesIO(response.read())) as z:
-                                        # Assumes there is only 1 CSV in the zip
+                                                                                # Assumes there is only 1 CSV in the zip
                     csv_name = z.namelist()[0]
                     with z.open(csv_name) as f:
                         content = f.read()
                         
+                                                
+                                                
                                                 
                         # Cache raw CSV content locally
                         with open(cache_file, "wb") as out:
@@ -63,21 +69,29 @@ async def fetch_ff5_factors(start_date: str, end_date: str) -> pd.DataFrame:
                 return pd.DataFrame()
 
         
+        
+        
         # Parse the CSV. Ken French CSVs have a multi-line header, 
-                # usually the data starts after row 3, and ends before copyright info.
+                                # usually the data starts after row 3, and ends before copyright info.
         try:
-                        # We skip the first 3 rows since the header is on row 3 usually
+                                                # We skip the first 3 rows since the header is on row 3 usually
             df = pd.read_csv(cache_file, skiprows=3, index_col=0)
             
+                        
+                        
                         
             # The last few rows might be copyright strings instead of dates, so we clean it up
             df.index = pd.to_datetime(df.index, format="%Y%m%d", errors="coerce")
             df = df.dropna(subset=[df.columns[0]]) # drop metadata rows at the bottom
             
                         
+                        
+                        
             # Convert percentage returns to decimals
             df = df.astype(float) / 100.0
             
+                        
+                        
                         
             # Filter by requested date range
             mask = (df.index >= pd.to_datetime(start_date)) & (df.index <= pd.to_datetime(end_date))

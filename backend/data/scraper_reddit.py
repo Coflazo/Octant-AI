@@ -35,6 +35,10 @@ class RedditPost:
 
 
 
+
+
+
+
 # Regex that matches standalone uppercase word (potential ticker)
 TICKER_RE = re.compile(r'\b([A-Z]{1,5})\b')
 
@@ -95,6 +99,8 @@ class RedditScraper:
         all_posts: List[RedditPost] = []
         
                 
+                
+                
         # Override known tickers entirely if specifically searching for a dynamic subset
         if ticker_list:
             self.known_tickers.update(ticker_list)
@@ -109,6 +115,8 @@ class RedditScraper:
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
                 
+                                
+                                
                                 
                 # Setup realistic anti-bot context
                 context = await browser.new_context(
@@ -133,6 +141,8 @@ class RedditScraper:
                             await page.evaluate("window.scrollBy(0, window.innerHeight * 3)")
                             await page.wait_for_timeout(2000)
                         
+                                                
+                                                
                                                 
                         # Extract top post titles, upvotes, times, URLs using fallback evaluation
                         page_posts = await page.evaluate('''() => {
@@ -166,6 +176,8 @@ class RedditScraper:
                         }''')
                         
                                                 
+                                                
+                                                
                         # Filter for relevance to our universe
                         if page_posts:
                             page_posts.sort(key=lambda x: x["upvotes"], reverse=True)
@@ -182,6 +194,8 @@ class RedditScraper:
                                     tickers_in_title = [t for t in tickers_in_title if t in ticker_list]
 
                                 
+                                
+                                
                                 # Filter logic (top quintile or contains relevant ticker)
                                 if upvotes >= quintile_threshold or (len(tickers_in_title) > 0):
                                     post_obj = RedditPost(
@@ -192,6 +206,8 @@ class RedditScraper:
                                         tickers_mentioned=tickers_in_title
                                     )
                                     
+                                                                        
+                                                                        
                                                                         
                                     # Optional: Comment scraping can be added here as in Section 7
                                     all_posts.append(post_obj)

@@ -43,7 +43,7 @@ class ConnectionManager:
             websocket: The incoming WebSocket connection to accept.
             session_id: Unique identifier for this pipeline session.
         """
-                # Close any stale connection on the same session
+                                # Close any stale connection on the same session
         if session_id in self.active_connections:
             logger.warning(
                 "Replacing existing WebSocket for session_id=%s", session_id

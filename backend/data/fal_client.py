@@ -57,6 +57,8 @@ class FalChartClient:
             import fal_client
 
             
+            
+            
             # fal_client.subscribe is synchronous by default.
             result = await asyncio.to_thread(
                 fal_client.subscribe,
@@ -82,5 +84,5 @@ class FalChartClient:
 
         except Exception as exc:
             logger.error("Failed to generate sparkline for %s via fal.ai: %s", symbol, exc)
-                        # Sparkline is non-critical, return empty string per spec
+                                                # Sparkline is non-critical, return empty string per spec
             return ""

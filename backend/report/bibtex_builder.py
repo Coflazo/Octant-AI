@@ -10,9 +10,11 @@ from backend.data.literature_sources import PaperObject
 
 def _clean_authors(raw_authors: str) -> str:
     """removes html tags and handles 'et al' conversions for bibtex 'and' syntax lol"""
-        # Strip HTML
+                # Strip HTML
     clean = re.sub('<[^<]+?>', '', raw_authors)
     
+        
+        
         
     # Handle implicit et al.
     if "et al." in clean or "etal" in clean:
@@ -48,18 +50,20 @@ def build_bibtex_entries(papers: List[PaperObject]) -> str:
     entries = []
     
     for idx, paper in enumerate(papers):
-                # Generate a safe citation key (first author surname + year)
+                                # Generate a safe citation key (first author surname + year)
         authors = _clean_authors(paper.authors)
         first_author = authors.split(" and ")[0].split()[-1] if authors != "Unknown Author" else "Anon"
         c_key = "".join(filter(str.isalnum, first_author)) + str(paper.year) + str(idx)
         
+                
+                
                 
         # Determine entry type
         repo = _clean_bibtex_value(paper.journal_or_repo.lower())
         title = _clean_bibtex_value(paper.title)
         
         if "arxiv" in repo or "ssrn" in repo or "preprint" in repo:
-                        # Preprints use @misc
+                                                # Preprints use @misc
             entry = [
                 f"@misc{{{c_key},",
                 f"  title = {{{title}}},",
@@ -68,7 +72,7 @@ def build_bibtex_entries(papers: List[PaperObject]) -> str:
                 f"  howpublished = {{{_clean_bibtex_value(paper.journal_or_repo)}}},"
             ]
         else:
-                        # Published papers use @article
+                                                # Published papers use @article
             entry = [
                 f"@article{{{c_key},",
                 f"  title = {{{title}}},",
@@ -80,6 +84,8 @@ def build_bibtex_entries(papers: List[PaperObject]) -> str:
         if paper.url:
             entry.append(f"  url = {{{_clean_bibtex_value(paper.url)}}},")
             
+                    
+                    
                     
         # Add summary finding as a note for the context Appendix
         note_str = paper.key_finding.replace("\n", " ") if paper.key_finding else ""

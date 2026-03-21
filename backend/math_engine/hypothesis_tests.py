@@ -14,6 +14,8 @@ from scipy import stats
 logger = logging.getLogger(__name__)
 
 
+
+
 # --- Dataclasses ---
 
 @dataclass
@@ -28,6 +30,10 @@ class BootstrapResult:
     sharpe_mean: float
     confidence_interval_95: tuple[float, float]
     p_value_vs_zero: float
+
+
+
+
 
 
 
@@ -72,12 +78,16 @@ def run_bootstrap_sharpe(returns: pd.Series, n_bootstrap: int = 10000) -> Bootst
     obs_sharpe = (obs_mean / obs_std) * np.sqrt(252)
     
         
+        
+        
     # We enforce the null hypothesis that true mean return = 0 by centering the distribution
     centered_rets = rets - obs_mean
     
         
+        
+        
     # Bootstrapping
-        # Generating indices mapping array
+                # Generating indices mapping array
     indices = np.random.randint(0, N, size=(n_bootstrap, N))
     sampled = centered_rets[indices]
     
@@ -85,14 +95,20 @@ def run_bootstrap_sharpe(returns: pd.Series, n_bootstrap: int = 10000) -> Bootst
     stds = np.std(sampled, axis=1, ddof=1)
     
         
+        
+        
     # Handle zero-std paths to avoid division by zero
     stds[stds == 0] = 1e-8
     null_sharpes = (means / stds) * np.sqrt(252)
     
         
+        
+        
     # P-value = fraction of null sharpes matching or exceeding our observed
     p_val = np.sum(null_sharpes >= obs_sharpe) / n_bootstrap
     
+        
+        
         
     # Get 95% CI of the ACTUALLY observed distribution (from non-centered sampling)
     real_sampled = rets[indices]
@@ -128,6 +144,8 @@ def apply_benjamini_hochberg(p_values: List[float], alpha: float = 0.05) -> List
     thresholds = (np.arange(1, N + 1) / N) * alpha
     
         
+        
+        
     # Find the largest k where p_k <= (k/N)*alpha
     k = 0
     for i in range(N - 1, -1, -1):
@@ -148,9 +166,13 @@ def compute_bayesian_adjusted_sharpe(sample_sharpe: float, n_periods: int, prior
     if n_periods == 0: return prior_mean
     
         
+        
+        
     # Precision is 1/variance
     prior_prec = 1.0 / (prior_std**2)
     
+        
+        
         
     # In standard SR approximations, variance error ≈ 1/n_periods
     likelihood_prec = n_periods / 1.0 # assumes variance scalar = 1

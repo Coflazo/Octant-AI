@@ -50,6 +50,8 @@ class Settings(BaseSettings):
     )
 
     
+    
+    
     # ── API Keys ───────────────────────────────────────────────────────────
     GEMINI_API_KEY: str = ""
     RESON8_API_KEY: str = ""
@@ -59,6 +61,8 @@ class Settings(BaseSettings):
     CORE_API_KEY: Optional[str] = None
 
     
+    
+    
     # ── File Paths ─────────────────────────────────────────────────────────
     CHROMA_DB_PATH: str = "./data/chromadb"
     REPORTS_OUTPUT_PATH: str = "./reports"
@@ -66,9 +70,13 @@ class Settings(BaseSettings):
     WSBT_BINARY_PATH: str = "./bin/wsbt"
 
     
+    
+    
     # ── Logging ────────────────────────────────────────────────────────────
     LOG_LEVEL: str = "INFO"
 
+    
+    
     
     # ── Server ─────────────────────────────────────────────────────────────
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
@@ -77,17 +85,23 @@ class Settings(BaseSettings):
     PORT: int = 8000
 
     
+    
+    
     # ── Pipeline Tuneables ─────────────────────────────────────────────────
     MAX_UNIVERSE_SIZE: int = 200
     BACKTEST_DEFAULT_PERIOD_YEARS: int = 10
     MONTE_CARLO_PATHS: int = 50000
 
     
+    
+    
     # ── Model Names ────────────────────────────────────────────────────────
     GEMINI_REASONING_MODEL: str = "gemini-2.5-pro-preview-05-06"
     GEMINI_FLASH_MODEL: str = "gemini-2.0-flash"
     GEMINI_EMBEDDING_MODEL: str = "models/text-embedding-004"
 
+    
+    
     
     # ── External Service URLs ──────────────────────────────────────────────
     RESON8_BASE_URL: str = "https://api.reson8.dev"

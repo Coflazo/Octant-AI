@@ -9,15 +9,17 @@ import './index.css';
 export default function App() {
     const [sessionId] = useState(() => uuidv4());
     const { status: wsStatus, events, sendMessage } = usePulseWebSocket(sessionId);
+
+
     
-        
+
     // Global State
     const [pipelineStatus, setPipelineStatus] = useState<string>("idle");
     const [thesis, setThesis] = useState("");
     const [exchanges, setExchanges] = useState<string[]>([]);
     const [dateRange, setDateRange] = useState({ start: '', end: '' });
     const [sector, setSector] = useState("All");
-    
+
     const [hypotheses, setHypotheses] = useState<any[]>([]);
     const [citations, setCitations] = useState<any[]>([]);
     const [tickers, setTickers] = useState<any[]>([]);
@@ -27,7 +29,9 @@ export default function App() {
     const [agentStatuses, setAgentStatuses] = useState<any>({});
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
+
     
+
     // Event Router
     useEffect(() => {
         if (events.length === 0) return;
@@ -78,7 +82,7 @@ export default function App() {
         setHypotheses([]); setCitations([]); setTickers([]); setMetricsMatrix([]);
         setReportOutline([]); setActivityLog([]); setPdfUrl(null);
         setAgentStatuses({});
-        
+
         try {
             await fetch(`http://localhost:8000/api/research/run`, {
                 method: 'POST',
@@ -91,7 +95,7 @@ export default function App() {
                     sector: sector === "All" ? null : sector
                 })
             });
-        } catch(e) {
+        } catch (e) {
             console.error("Pipeline failed to start", e);
             setPipelineStatus("error");
         }
@@ -101,7 +105,7 @@ export default function App() {
         <div className="min-h-screen bg-octDeep text-octLight font-sans">
             <header className="border-b border-gray-800 p-4 flex justify-between items-center">
                 <div className="flex items-center gap-3">
-                    <img src="/assets/Octant_Logo.png" alt="Octant AI" className="h-8 object-contain" onError={(e) => { e.currentTarget.style.display='none' }} />
+                    <img src="/assets/Octant_Logo.png" alt="Octant AI" className="h-8 object-contain" onError={(e) => { e.currentTarget.style.display = 'none' }} />
                     <h1 className="text-xl font-bold tracking-tight">Octant AI <span className="text-gray-500 font-light text-sm ml-2">v0.1.0-alpha</span></h1>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-400">
@@ -111,7 +115,7 @@ export default function App() {
             </header>
 
             <main className="grid grid-cols-[280px_1fr_320px] h-[calc(100vh-65px)] overflow-hidden">
-                <LeftPanel 
+                <LeftPanel
                     thesis={thesis} setThesis={setThesis}
                     exchanges={exchanges} setExchanges={setExchanges}
                     dateRange={dateRange} setDateRange={setDateRange}
@@ -120,7 +124,7 @@ export default function App() {
                     pipelineStatus={pipelineStatus}
                     sendMessage={sendMessage}
                 />
-                <CenterPanel 
+                <CenterPanel
                     agentStatuses={agentStatuses}
                     hypotheses={hypotheses}
                     citations={citations}
@@ -128,7 +132,7 @@ export default function App() {
                     metricsMatrix={metricsMatrix}
                     activityLog={activityLog}
                 />
-                <RightPanel 
+                <RightPanel
                     reportOutline={reportOutline}
                     pdfUrl={pdfUrl}
                     metricsMatrix={metricsMatrix}

@@ -35,6 +35,8 @@ class PerformanceReport:
     win_rate: float
     
         
+        
+        
     # Advanced metrics
     bayes_sharpe: float
     bootstrap_p_value: float
@@ -43,10 +45,14 @@ class PerformanceReport:
     garch_persistence: float
     
         
+        
+        
     # Sensitivity
     net_cagr_2bps: float
     net_cagr_10bps: float
     
+        
+        
         
     # Metadata context
     raw_results_dict: Dict[str, Any] = field(default_factory=dict)
@@ -56,7 +62,7 @@ class PerformanceCalculator:
     """master class running all 18 mathematical models over backtest output lol"""
 
     def __init__(self):
-                # Survivorship bias annual penalties
+                                # Survivorship bias annual penalties
         self.SURVIVORSHIP_PREMIUM = {
             "large_cap": 0.005,
             "mid_cap": 0.015,
@@ -83,6 +89,8 @@ class PerformanceCalculator:
             return PerformanceReport(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
 
         
+        
+        
         # Basic Return/Vol
         years = len(df) / 252
         cum_ret = (1 + df).prod() - 1
@@ -99,15 +107,21 @@ class PerformanceCalculator:
         win_rate = (df > 0).mean()
         
                 
+                
+                
         # Drawdowns & Calmar
         calmar = compute_calmar_ratio(df)
         dd_res = compute_max_drawdown(df)
         
                 
+                
+                
         # Hypothesis Testing
-                # 1. Bootstrap Sharpe
+                                # 1. Bootstrap Sharpe
         boot_res = run_bootstrap_sharpe(df, n_bootstrap=2000)
         
+                
+                
                 
         # 2. Bayesian Sharpe
         prior_mean = prior_literature_sharpe if prior_literature_sharpe is not None else 0.5
@@ -119,16 +133,22 @@ class PerformanceCalculator:
         )
         
                 
+                
+                
         # Cross-Sectional
         ff5_res = run_ff5_regression(df, ff5_factors)
         ff5_alpha = ff5_res.alpha if ff5_res else 0.0
         ff5_r_squared = ff5_res.r_squared if ff5_res else 0.0
         
                 
+                
+                
         # Volatility / Time Series proxy
         garch_res = fit_garch_family(df)
         garch_pers = garch_res.persistence if garch_res else 0.0
         
+                
+                
                 
         # --- Survivorship Bias Correction ---
         scope = (hypothesis.scope or "").lower()
@@ -144,10 +164,12 @@ class PerformanceCalculator:
         cagr_adj = cagr - surv_penalty
         
                 
+                
+                
         # --- Transaction Cost Sensitivity ---
-                # Assuming a default turnover of 10% of portfolio daily (0.1 trades/day) 
-                # strategy_returns - n_trades * cost_per_trade
-                # Annualized cost = 252 * turnover * bps
+                                # Assuming a default turnover of 10% of portfolio daily (0.1 trades/day) 
+                                # strategy_returns - n_trades * cost_per_trade
+                                # Annualized cost = 252 * turnover * bps
         turnover_daily = 0.10
         cost_2bps_daily = turnover_daily * 0.0002
         cost_10bps_daily = turnover_daily * 0.0010
@@ -158,6 +180,8 @@ class PerformanceCalculator:
         cagr_2bps = (1 + ((1 + net_ret_2bps).prod() - 1)) ** (1 / max(years, 1e-4)) - 1
         cagr_10bps = (1 + ((1 + net_ret_10bps).prod() - 1)) ** (1 / max(years, 1e-4)) - 1
 
+        
+        
         
         # Build raw dict for report formatting
         raw_stats = {

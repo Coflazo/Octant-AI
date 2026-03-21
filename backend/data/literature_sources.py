@@ -32,6 +32,8 @@ class PaperObject:
     influence_score: Optional[float] = None
     
         
+        
+        
     # Gemini extracted fields
     key_finding: str = ""
     signal_tested: str = ""
@@ -61,6 +63,8 @@ class LiteratureEngine:
         logger.info("Starting literature search for Hypothesis %s", hypothesis.id)
 
         
+        
+        
         # Fire off all API searches in parallel
         results = await asyncio.gather(
             self._search_arxiv(hypothesis, max_papers_per_source),
@@ -78,6 +82,8 @@ class LiteratureEngine:
                 logger.error("A literature source failed: %s", res)
 
         
+        
+        
         # Deduplicate
         seen = set()
         unique_papers = []
@@ -89,6 +95,8 @@ class LiteratureEngine:
 
         logger.info("Found %d unique API papers for %s", len(unique_papers), hypothesis.id)
         
+                
+                
                 
         # Analyze papers with Gemini Flash in batches
         if unique_papers and self.model:

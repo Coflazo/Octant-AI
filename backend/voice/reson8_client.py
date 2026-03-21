@@ -53,17 +53,21 @@ class Reson8Client:
             return True
 
         try:
-                        # Treat bytes as 16-bit little-endian PCM
-                        # (Note: if frontend sends WebM, this serves as a proxy metric or
-                        # requires extraction. For this implementation we calculate the raw RMS)
+                                                # Treat bytes as 16-bit little-endian PCM
+                                                # (Note: if frontend sends WebM, this serves as a proxy metric or
+                                                # requires extraction. For this implementation we calculate the raw RMS)
             samples = np.frombuffer(audio_chunk, dtype=np.int16)
             if len(samples) == 0:
                 return True
 
             
+            
+            
             # Convert to float and normalise to [-1.0, 1.0]
             float_samples = samples.astype(np.float32) / 32768.0
 
+            
+            
             
             # Calculate RMS amplitude
             rms = math.sqrt(np.mean(float_samples**2))
@@ -93,7 +97,7 @@ class Reson8Client:
         """
         if not self.api_key:
             logger.warning("Reson8 API key unconfigured — returning mock stream.")
-                        # For development without a key, yield mock responses
+                                                # For development without a key, yield mock responses
             yield "this is a mock "
             await asyncio.sleep(0.5)
             yield "transcription of the "
@@ -107,6 +111,8 @@ class Reson8Client:
             "Content-Type": "audio/webm",  # Matches browser MediaRecorder output
         }
 
+        
+        
         
         # Reson8 API specific limits
         MAX_RETRIES = 3
@@ -127,12 +133,16 @@ class Reson8Client:
                             )
 
                         
+                        
+                        
                         # Stream the response lines back to the caller
-                                                # Assuming Reson8 returns line-delimited text payloads
+                                                                                                # Assuming Reson8 returns line-delimited text payloads
                         async for line in response.aiter_lines():
                             if line and line.strip():
                                 yield line.strip()
 
+                
+                
                 
                 # If successful, exit the retry loop
                 break

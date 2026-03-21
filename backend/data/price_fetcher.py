@@ -34,11 +34,13 @@ class PriceFetcher:
             "Fetching universe tickers for exchanges=%s, sector=%s, max=%d",
             exchanges, sector, max_tickers
         )
-                # Note: yfinance has no native multi-exchange stock screener. 
-                # In production this would query a proper screener API.
-                # We provide a hardcoded starter universe mimicking the top S&P/Nasdaq equivalents.
+                                # Note: yfinance has no native multi-exchange stock screener. 
+                                # In production this would query a proper screener API.
+                                # We provide a hardcoded starter universe mimicking the top S&P/Nasdaq equivalents.
         base_universe = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "BRK-B", "TSLA", "UNH", "JNJ", "XOM", "JPM", "V"]
         
+                
+                
                 
         # Sector mock filtering if requested
         if sector and sector.lower() == "energy":
@@ -88,12 +90,12 @@ class PriceFetcher:
 
         result_dict = {}
         if len(tickers) == 1:
-                        # Single ticker returns standard 2D Frame (Columns: Open, High, etc)
+                                                # Single ticker returns standard 2D Frame (Columns: Open, High, etc)
             ticker = tickers[0]
             clean_df = raw_data.ffill().dropna()
             result_dict[ticker] = clean_df
         else:
-                        # Multi-ticker returns MultiIndex columns (Ticker -> Open, High, etc)
+                                                # Multi-ticker returns MultiIndex columns (Ticker -> Open, High, etc)
             for ticker in tickers:
                 if ticker in raw_data.columns.levels[0]:
                     ticker_df = raw_data[ticker].copy()
@@ -147,7 +149,7 @@ class PriceFetcher:
         for ticker, df in price_data.items():
             if "Close" in df.columns:
                 close = df["Close"]
-                                # ln(P_t / P_{t-1})
+                                                                # ln(P_t / P_{t-1})
                 log_ret = np.log(close / close.shift(1))
                 returns_dict[ticker] = log_ret.dropna()
         return returns_dict

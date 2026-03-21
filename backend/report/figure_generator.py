@@ -32,6 +32,8 @@ class FigureGenerator:
         os.makedirs(self.output_dir, exist_ok=True)
         
                 
+                
+                
         # Base styling setup
         self.OCT_NAVY = "#1B3D6E"
         self.OCT_GRAY = "#F0F0F0"
@@ -76,9 +78,11 @@ class FigureGenerator:
         ax.plot(bench_cum.index, bench_cum.values, color="gray", linestyle="--", alpha=0.7, label="Benchmark")
         
                 
+                
+                
         # Shade drawdowns (assume drawdown_series is negative fractional drawdown)
         if not drawdown_series.empty:
-                        # We shade where DD < -0.01 (1%) to avoid noise
+                                                # We shade where DD < -0.01 (1%) to avoid noise
             significant_dd = drawdown_series < -0.01
             if significant_dd.any():
                 ax.fill_between(
@@ -95,6 +99,8 @@ class FigureGenerator:
         ax.set_ylabel("Growth of $1")
         ax.legend(loc="upper right")
         
+                
+                
                 
         # Statistics Box
         stats_text = (
@@ -122,6 +128,8 @@ class FigureGenerator:
         fig = plt.figure(figsize=(14, 6))
         
                 
+                
+                
         # Subset just calls for the surface representation
         df = vol_surface.implied_vols
         calls = df[df["type"] == "call"]
@@ -130,6 +138,8 @@ class FigureGenerator:
             return ""
             
                     
+                    
+                    
         # Group to create grid
         grid = calls.groupby(["T", "K"])["implied_vol"].mean().unstack()
         T = grid.index.values
@@ -137,6 +147,8 @@ class FigureGenerator:
         T_mesh, K_mesh = np.meshgrid(T, K)
         IV_mesh = grid.values.T
         
+                
+                
                 
         # 3D Surface
         ax1 = fig.add_subplot(121, projection='3d')
@@ -147,6 +159,8 @@ class FigureGenerator:
         ax1.set_title("3D Volatility Surface")
         fig.colorbar(surf, ax=ax1, shrink=0.5, aspect=10)
         
+                
+                
                 
         # 2D Heatmap
         ax2 = fig.add_subplot(122)
@@ -172,6 +186,8 @@ class FigureGenerator:
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
         
                 
+                
+                
         # Distribution
         sns.histplot(df, bins=50, stat="density", ax=ax1, color=self.OCT_NAVY, alpha=0.6)
         mu, std = df.mean(), df.std()
@@ -182,6 +198,8 @@ class FigureGenerator:
         ax1.legend()
         
                 
+                
+                
         # Kurtosis / Skewness box
         skew = df.skew()
         kurt = df.kurtosis()
@@ -189,6 +207,8 @@ class FigureGenerator:
         props = dict(boxstyle='round', facecolor='white', alpha=0.7)
         ax1.text(0.05, 0.95, stats_txt, transform=ax1.transAxes, verticalalignment='top', bbox=props)
         
+                
+                
                 
         # Q-Q plot
         stats.probplot(df, dist="norm", plot=ax2)
@@ -212,6 +232,8 @@ class FigureGenerator:
             
         corr = df.corr()
         
+                
+                
                 
         # Requires seaborn clustermap (creates its own figure)
         g = sns.clustermap(
@@ -242,10 +264,14 @@ class FigureGenerator:
         fig, ax = plt.subplots(figsize=(10, 5))
         
                 
+                
+                
         # Plot Alpha
         ax.plot(alpha.index, alpha.values, color=self.OCT_NAVY, label="12m Rolling Alpha")
         ax.axhline(0, color="gray", linestyle="--", linewidth=1.5)
         
+                
+                
                 
         # Fill standard deviation (approximate empirical bounds over window)
         std = alpha.rolling(60).std()
@@ -257,6 +283,8 @@ class FigureGenerator:
         ax.legend(loc="upper left")
         ax.set_ylabel("Daily Alpha (Intercept)")
         
+                
+                
                 
         # Secondary axis for rolling Sharpe
         ax2 = ax.twinx()
@@ -304,8 +332,10 @@ class FigureGenerator:
         fig, ax = plt.subplots(figsize=(8, 4))
         
                 
+                
+                
         # Create a mock stylistic representation of a wavelet power spectrum
-                # since PyWavelet continuous transform output isn't preserved in the basic result dataclass
+                                # since PyWavelet continuous transform output isn't preserved in the basic result dataclass
         x = np.linspace(0, 10, 100)
         y = np.linspace(0, 5, 50)
         X, Y = np.meshgrid(x, y)

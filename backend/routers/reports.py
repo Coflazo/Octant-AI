@@ -63,7 +63,7 @@ async def download_report(filename: str) -> FileResponse:
     Raises:
         HTTPException: If the filename is not found or contains path traversal.
     """
-        # Guard against path traversal
+                # Guard against path traversal
     if ".." in filename or "/" in filename or "\\" in filename:
         raise HTTPException(status_code=400, detail="Invalid filename")
 

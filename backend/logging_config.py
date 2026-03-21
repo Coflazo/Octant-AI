@@ -34,6 +34,8 @@ def get_logger(name: str) -> logging.Logger:
     logger = logging.getLogger(name)
     
         
+        
+        
     # Avoid duplicate handlers if imported heavily
     if logger.handlers:
         return logger
@@ -44,6 +46,8 @@ def get_logger(name: str) -> logging.Logger:
 
     handler = logging.StreamHandler(sys.stdout)
     
+        
+        
         
     # Check if standard production mode
     log_format = os.environ.get("LOG_FORMAT", "pretty").lower()

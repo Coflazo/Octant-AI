@@ -14,6 +14,8 @@ from scipy.optimize import minimize
 logger = logging.getLogger(__name__)
 
 
+
+
 # --- Dataclasses ---
 
 @dataclass
@@ -38,6 +40,10 @@ class DrawdownResult:
     start_date: str
     end_date: str
     recovery_date: str
+
+
+
+
 
 
 
@@ -82,9 +88,13 @@ def ledoit_wolf_shrinkage(return_matrix: pd.DataFrame) -> np.ndarray:
         return np.cov(X, rowvar=False)
 
     
+    
+    
     # Sample covariance
     S = np.cov(X, rowvar=False)
     
+        
+        
         
     # Constant correlation target
     var = np.diag(S)
@@ -106,6 +116,8 @@ def ledoit_wolf_shrinkage(return_matrix: pd.DataFrame) -> np.ndarray:
                 F[i, j] = r_bar * std[i] * std[j]
 
     
+    
+    
     # Compute optimal shrinkage intensity delta
     pi = 0.0
     term1 = 0.0
@@ -119,16 +131,24 @@ def ledoit_wolf_shrinkage(return_matrix: pd.DataFrame) -> np.ndarray:
     rho_pi = 0.0 # Strict derivation sums covariances of var interactions; simplified here:
     
         
+        
+        
     # Simple bounds limit: 
-        # (Actual LW implementation requires complex rho summation which is extremely dense)
-        # Using strict standard simplified asymptotic delta limit if gamma > 0
+                # (Actual LW implementation requires complex rho summation which is extremely dense)
+                # Using strict standard simplified asymptotic delta limit if gamma > 0
     delta = min(max(pi / gamma, 0), 1) if gamma > 0 else 1.0
     
     S_shrunk = delta * F + (1 - delta) * S
     
         
+        
+        
     # Guarantee PD
     return nearest_positive_definite(S_shrunk)
+
+
+
+
 
 
 
@@ -159,15 +179,19 @@ def compute_efficient_frontier(
         return -port_ret(w) / vol
 
     
+    
+    
     # Constraint: sum of weights = 1
     constraints = [{'type': 'eq', 'fun': lambda x: np.sum(x) - 1}]
     init_guess = np.ones(n) / n
 
     try:
-                # GMV
+                                # GMV
         gmv_res = minimize(port_vol, init_guess, method='SLSQP', bounds=bounds, constraints=constraints)
         gmv_weights = gmv_res.x
         
+                
+                
                 
         # Tangency (Max Sharpe)
         tan_res = minimize(neg_sharpe, init_guess, method='SLSQP', bounds=bounds, constraints=constraints)
@@ -175,6 +199,8 @@ def compute_efficient_frontier(
         tan_ret = port_ret(tan_weights)
         tan_risk = port_vol(tan_weights)
         
+                
+                
                 
         # Frontier curve bounding
         min_ret = port_ret(gmv_weights)
@@ -206,13 +232,17 @@ def compute_efficient_frontier(
 
 
 
+
+
+
+
 # --- Risk Metrics ---
 
 def compute_portfolio_var_es(paths: np.ndarray, confidence: float = 0.95, horizon_days: int = 1) -> VaRESResult:
     """computes parametric/historical value at risk and expected shortfall from simulated paths matrix lol"""
-        # paths logic: assumes paths is shape (n_paths, time_steps, n_assets) or (n_paths, time_steps)
+                # paths logic: assumes paths is shape (n_paths, time_steps, n_assets) or (n_paths, time_steps)
     if len(paths.shape) == 3:
-                # Equal weighted portfolio return at horizon
+                                # Equal weighted portfolio return at horizon
         initial_val = np.sum(paths[:, 0, :] / paths.shape[2], axis=1)
         horizon_val = np.sum(paths[:, min(horizon_days, paths.shape[1]-1), :] / paths.shape[2], axis=1)
     elif len(paths.shape) == 2:
@@ -262,10 +292,14 @@ def compute_max_drawdown(returns: pd.Series) -> DrawdownResult:
     end_date: pd.Timestamp = drawdown.idxmax() # type: ignore
     
         
+        
+        
     # Peak date
     history_to_end = cumulative[:end_date]
     start_date: pd.Timestamp = history_to_end.idxmax() # type: ignore
     
+        
+        
         
     # Recovery date
     recovery_date = ""

@@ -46,24 +46,32 @@ class ModernFinanceScraper:
             return papers
 
         
+        
+        
         # Note: We mock the specific URL traversal logic to prevent live scraping against arbitrary targets 
-                # during integration checks, but the architecture (Playwright -> Download -> Fitz -> Gemini) is fully implemented.
+                                # during integration checks, but the architecture (Playwright -> Download -> Fitz -> Gemini) is fully implemented.
         try:
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
                 page = await browser.new_page()
                 
                                 
+                                
+                                
                 # Mock: navigating to journal
                 await page.goto("https://arxiv.org", wait_until="domcontentloaded")
                 await asyncio.sleep(random.uniform(2, 4))
                 
                                 
+                                
+                                
                 # Assume Playwright extracted an article link containing a PDF
-                                # We substitute a publicly available dummy PDF for testing text extraction
+                                                                # We substitute a publicly available dummy PDF for testing text extraction
                 mock_pdf_url = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
                 local_path = f"{self.download_dir}/dummy_finance_article.pdf"
 
+                
+                
                 
                 # Download PDF bytes
                 async with httpx.AsyncClient() as client:
@@ -73,6 +81,8 @@ class ModernFinanceScraper:
                             f.write(resp.content)
                             
                                             
+                                            
+                                            
                 # Extract Text with PyMuPDF (fitz)
                 doc = fitz.open(local_path)
                 full_text = ""
@@ -81,8 +91,8 @@ class ModernFinanceScraper:
                 doc.close()
                 
                 if full_text:
-                                        # Pass to Gemini Flash for structured extraction
-                                        # We trim the text to avoid typical token limits on full papers in this stub
+                                                                                # Pass to Gemini Flash for structured extraction
+                                                                                # We trim the text to avoid typical token limits on full papers in this stub
                     extracted = await self._gemini_extract(full_text[:15000])
                     if extracted:
                         papers.append(extracted)

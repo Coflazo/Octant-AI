@@ -24,7 +24,7 @@ class FundamentalsEngine:
 
     async def get_short_interest(self, tickers: List[str]) -> Dict[str, float]:
         """fetch short interest as % of float for given tickers lol"""
-                # Using a mock sleep for OpenBB integration as real SI data is often premium-only
+                                # Using a mock sleep for OpenBB integration as real SI data is often premium-only
         await asyncio.sleep(0.1)
         return {ticker: 2.5 for ticker in tickers}
 
@@ -76,10 +76,10 @@ class FundamentalsEngine:
         logger.info("Fetching macro indicators from FRED")
         
         def _fetch_sync():
-                        # In a production environment with OpenBB v4 fully configured:
-                        # from openbb import obb
-                        # ff_rate = obb.economy.fred_series("FEDFUNDS").results[-1].value
-                        # We mock the return to ensure pipeline continuity if OpenBB is rate-limited
+                                                # In a production environment with OpenBB v4 fully configured:
+                                                # from openbb import obb
+                                                # ff_rate = obb.economy.fred_series("FEDFUNDS").results[-1].value
+                                                # We mock the return to ensure pipeline continuity if OpenBB is rate-limited
             return {
                 "federal_funds_rate": 5.25,
                 "yield_spread_10y_2y": -0.45,

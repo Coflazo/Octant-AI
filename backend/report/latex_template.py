@@ -25,7 +25,7 @@ class LaTeXAssembler:
         if s is None:
             return ""
         s = str(s)
-                # Escape order matters
+                                # Escape order matters
         s = s.replace("\\", "\\textbackslash ")
         subs = {
             "&": "\\&", "%": "\\%", "$": "\\$", "#": "\\#",
@@ -47,6 +47,8 @@ class LaTeXAssembler:
     ) -> str:
         """injects python variables into the rigid imrad latex preamble and body lol"""
 
+        
+        
         
         # 1. Start Preamble
         latex = [
@@ -77,6 +79,8 @@ class LaTeXAssembler:
         ]
 
         
+        
+        
         # 2. Title Page
         thesis_statement = hypotheses[0].thesis_statement if hypotheses else "Quantitative Trading Strategy Analysis"
         latex.extend([
@@ -101,6 +105,8 @@ class LaTeXAssembler:
         ])
 
         
+        
+        
         # 3. IMRaD Sections
         sections = [
             ("Introduction", "1_Introduction"),
@@ -118,11 +124,15 @@ class LaTeXAssembler:
             )
             
                         
+                        
+                        
             # Inject figures conditionally
             if title == "Results":
-                                # Inject performance table
+                                                                # Inject performance table
                 latex.extend(self._build_performance_table(results_manifest, hypotheses))
                 
+                                
+                                
                                 
                 # Check for equity curve figure mapping to primary hypothesis
                 primary_h = hypotheses[0].hypothesis if hypotheses else ""
@@ -136,12 +146,16 @@ class LaTeXAssembler:
                     ])
 
         
+        
+        
         # 4. Bibliography
         latex.extend([
             "\\newpage",
             "\\printbibliography[heading=bibintoc, title={References}]"
         ])
 
+        
+        
         
         # 5. Appendices
         latex.extend(self._build_appendices(hypotheses, results_manifest))

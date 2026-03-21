@@ -39,10 +39,14 @@ def construct_signal(
     cat = hypothesis.math_method_category.lower()
     
         
+        
+        
     # We aggregate signals across the entire universe into a single representative composite trace 
-        # to run a unified backtest proxy. In production, this would be an NxT matrix backtest.
-        # For MVP speed, we use an equal-weighted proxy of the first 3 valid tickers.
+                # to run a unified backtest proxy. In production, this would be an NxT matrix backtest.
+                # For MVP speed, we use an equal-weighted proxy of the first 3 valid tickers.
     
+        
+        
         
     # Grab the first available ticker to mock the framework
     target_ticker = "AAPL"
@@ -51,7 +55,7 @@ def construct_signal(
         
     df = price_matrix.get(target_ticker, pd.DataFrame())
     if df.empty or "Close" not in df.columns:
-                # Return empty signals
+                                # Return empty signals
         return pd.Series(dtype=bool), pd.Series(dtype=bool)
 
     closes = df["Close"]
@@ -65,16 +69,18 @@ def construct_signal(
         sentiment_z = sentiment_signals[target_ticker].z_score
 
     
+    
+    
     # Baseline Routing Logic (Mocking exact signal logic per path)
     if "time_series" in cat:
-                # Mean cross-over proxy
+                                # Mean cross-over proxy
         ma_short = closes.rolling(10).mean()
         ma_long = closes.rolling(50).mean()
         entries = (ma_short > ma_long) & (ma_short.shift(1) <= ma_long.shift(1))
         exits = (ma_short < ma_long) & (ma_short.shift(1) >= ma_long.shift(1))
         
     elif "mean_reversion" in cat:
-                # Z-score of close vs 20d moving average
+                                # Z-score of close vs 20d moving average
         roll_mean = closes.rolling(20).mean()
         roll_std = closes.rolling(20).std()
         z = (closes - roll_mean) / roll_std
@@ -82,36 +88,38 @@ def construct_signal(
         exits = z > 0.0
         
     elif "factor_model" in cat:
-                # Mock Factor signal: positive weekly return + positive sentiment
+                                # Mock Factor signal: positive weekly return + positive sentiment
         weekly_ret = closes.pct_change(5)
         entries = (weekly_ret > 0.01) & (sentiment_z > 0.5)
         exits = weekly_ret < -0.01
         
     elif "regime_detection" in cat:
-                # Mocking HMM volatility regime logic
+                                # Mocking HMM volatility regime logic
         garch_res = fit_garch_family(returns)
         if garch_res:
             hmm_res = detect_vol_regimes(garch_res.conditional_volatility)
             if hmm_res:
                 prob_high = hmm_res.regime_probs
-                                # Buy when low vol regime is highly probable
+                                                                # Buy when low vol regime is highly probable
                 entries = prob_high < 0.2
                 exits = prob_high > 0.8
-                                # Re-index to closes match
+                                                                # Re-index to closes match
                 entries = entries.reindex(closes.index, fill_value=False)
                 exits = exits.reindex(closes.index, fill_value=False)
     
     elif "volatility_surface" in cat or "options_pricing" in cat:
-                # Volatility breakout
+                                # Volatility breakout
         roll_std = closes.rolling(20).std()
         entries = roll_std > roll_std.rolling(50).mean() * 1.5
         exits = roll_std < roll_std.rolling(50).mean()
         
     else:
-                # Default momentum
+                                # Default momentum
         entries = closes > closes.rolling(20).mean()
         exits = closes < closes.rolling(20).mean()
 
+    
+    
     
     # Incorporate sentiment global override filter
     if sentiment_z < -2.0:
@@ -163,6 +171,8 @@ def run_custom_backtest(
     entry_price = 0.0
     entry_date = None
     
+        
+        
         
     # Sync indices
     df = pd.DataFrame({
@@ -226,6 +236,8 @@ class BacktestingAgent:
         await pulse.emit_status("backtesting", "active", 0, total, "Initialising Engines", "VectorBT + Explainable Loop", 0, total * 30)
 
         
+        
+        
         # We need a primary asset to measure benchmark / baseline
         target_ticker = "SPY"
         if target_ticker not in universe_result.price_matrix:
@@ -244,10 +256,14 @@ class BacktestingAgent:
             await pulse.emit_status("backtesting", "active", step, total, f"Testing Sub-Hypothesis {step}", hyp.hypothesis, int((step/total)*100), (total-step)*30)
 
             
+            
+            
             # 1. Target variables
-                        # For iteration, mock an empty math_results cross-section
+                                                # For iteration, mock an empty math_results cross-section
             math_results = {}
             
+                        
+                        
                         
             # 2. Construct boolean signals
             entries, exits = construct_signal(
@@ -259,9 +275,13 @@ class BacktestingAgent:
             )
             
                         
+                        
+                        
             # 3. VectorBT Fast Engine
             vbt_stats = run_vbt_backtest(entries, exits, price_df["Close"], long_only=True)
             
+                        
+                        
                         
             # 4. Extract simulated portfolio return series from VectorBT object
             portfolio = vbt_stats.get("portfolio")
@@ -271,23 +291,29 @@ class BacktestingAgent:
                 strat_returns = pd.Series(0.0, index=benchmark_returns.index)
             
                         
+                        
+                        
             # 5. Explainable Python Engine
-                        # Create a mock continuous signal series merely for the explainable log
+                                                # Create a mock continuous signal series merely for the explainable log
             sig_vals = pd.Series(0.0, index=price_df.index)
             log_df, custom_stats = run_custom_backtest(
                 entries, exits, price_df["Close"], sig_vals
             )
             
                         
+                        
+                        
             # 6. Extract prior literature Sharpe
             prior_sr = 0.5
             if hyp.hypothesis in citations_db:
-                                # Mock extracting avg effect size
+                                                                # Mock extracting avg effect size
                 prior_sr = 0.8
             
                         
+                        
+                        
             # 7. Performance Report Generation
-                        # Provide empty series defaults for optional math objects (garch, regime) if not computed
+                                                # Provide empty series defaults for optional math objects (garch, regime) if not computed
             garch_vol = pd.Series(0.15, index=strat_returns.index)
             regime = pd.Series(1) 
             
@@ -304,6 +330,8 @@ class BacktestingAgent:
             )
             
                         
+                        
+                        
             # Incorporate explicit VectorBT findings to bridge gap
             if report.cagr == 0 and vbt_stats.get("cagr") != 0:
                 report.cagr = vbt_stats["cagr"]
@@ -312,6 +340,8 @@ class BacktestingAgent:
 
             results[hyp.hypothesis] = report
             
+                        
+                        
                         
             # 8. Emit individual metric result to PULSE
             await pulse.emit_metric_result({
@@ -322,6 +352,8 @@ class BacktestingAgent:
                 "max_drawdown": report.max_drawdown
             })
             
+                    
+                    
                     
         # 9. Emit comparative benchmark view
         overall = {

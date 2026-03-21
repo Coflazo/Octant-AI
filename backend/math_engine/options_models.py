@@ -90,7 +90,7 @@ def implied_vol(market_price: float, S: float, K: float, r: float, T: float, opt
         return black_scholes_put(S, K, r, T, sigma) - market_price
 
     try:
-                # Bracket between 10 basis points and 1000%
+                                # Bracket between 10 basis points and 1000%
         iv = brentq(objective, 1e-6, 10.0)
         return float(iv)
     except Exception as e:
@@ -150,13 +150,13 @@ def build_vol_surface(options_chain: pd.DataFrame) -> Optional[VolSurface]:
 
 def compute_risk_reversal_25(vol_surface: VolSurface) -> float:
     """rr(25) = iv(25δ call) - iv(25δ put) lol"""
-        # Mocking delta extraction purely from VolSurface grid.
+                # Mocking delta extraction purely from VolSurface grid.
     if vol_surface is None or vol_surface.implied_vols.empty:
         return 0.0
         
     df = vol_surface.implied_vols
-        # In a real model we would filter by exact delta=0.25 on the curve. 
-        # Here we simulate the logic by grabbing average call skew vs put skew.
+                # In a real model we would filter by exact delta=0.25 on the curve. 
+                # Here we simulate the logic by grabbing average call skew vs put skew.
     calls = df[df["type"] == "call"]
     puts = df[df["type"] == "put"]
     
@@ -180,6 +180,8 @@ def compute_vol_term_structure_slope(vol_surface: VolSurface) -> float:
     if len(ts) == 0:
         return 0.0
         
+            
+            
             
     # Extrapolate nearest to 1m (0.08 yr) and 3m (0.25 yr)
     idx_1m = np.argmin(np.abs(ts[:, 0] - 0.08))

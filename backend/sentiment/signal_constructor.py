@@ -49,10 +49,14 @@ class SentimentSignalConstructor:
         results: Dict[str, SentimentSignal] = {}
 
         
+        
+        
         # STEP 1: Relative mention share normalisation
         total_mentions = sum(wsbt_counts.values()) or 1
         mention_shares = {ticker: count / total_mentions for ticker, count in wsbt_counts.items()}
 
+        
+        
         
         # Group posts by ticker
         posts_by_ticker: Dict[str, List[RedditPost]] = {t: [] for t in wsbt_counts.keys()}
@@ -62,8 +66,10 @@ class SentimentSignalConstructor:
                     posts_by_ticker[t].append(post)
 
         
+        
+        
         # Batch process each ticker through Gemini
-                # We limit concurrency to prevent rate limits
+                                # We limit concurrency to prevent rate limits
         semaphore = asyncio.Semaphore(5)
 
         async def _process_ticker(ticker: str) -> Optional[SentimentSignal]:
@@ -72,8 +78,10 @@ class SentimentSignalConstructor:
                 return None
 
             
+            
+            
             # STEP 2 & 3: Upvote-weighted directional score & Options flow override
-                        # We use Gemini to rate the posts
+                                                # We use Gemini to rate the posts
             raw_scores = []
             catalysts = set()
             convictions = []
@@ -100,6 +108,8 @@ class SentimentSignalConstructor:
                         data = json.loads(txt)
                         
                                                 
+                                                
+                                                
                         # Apply Step 3: options flow override immediately
                         flow = data.get("options_flow_override", "none").lower()
                         if "buying puts" in flow or data.get("position_type") == "puts":
@@ -121,21 +131,27 @@ class SentimentSignalConstructor:
                         logger.debug("Gemini extraction failed for post %s: %s", post.title, e)
 
             
+            
+            
             # Aggregate scores for this ticker
             total_post_upvotes = sum(p.upvotes for p in posts[:10]) or 1
             final_sentiment_score = sum(raw_scores) / total_post_upvotes if raw_scores else 0.0
             avg_conviction = sum(convictions) / len(convictions) if convictions else 0.5
             
                         
+                        
+                        
             # Normalise position distribution
             total_pos = sum(pos_types.values()) or 1
             pos_dist = {k: v / total_pos for k, v in pos_types.items()}
 
             
+            
+            
             # STEP 4: EWMA smoothing & STEP 5: Rolling z-score
-                        # In a stateless single-run system, we mock the history. 
-                        # In production, we'd retrieve a 90-day sentiment series from ChromaDB/SQL.
-                        # Here we apply the math interface on a dummy 90-day zero-mean series to demonstrate compliance.
+                                                # In a stateless single-run system, we mock the history. 
+                                                # In production, we'd retrieve a 90-day sentiment series from ChromaDB/SQL.
+                                                # Here we apply the math interface on a dummy 90-day zero-mean series to demonstrate compliance.
             history = pd.Series([0.0] * 89 + [final_sentiment_score])
             ewma_series = history.ewm(span=5).mean()
             ewma_val = ewma_series.iloc[-1]
@@ -154,6 +170,8 @@ class SentimentSignalConstructor:
                 mention_share=mention_shares.get(ticker, 0.0)
             )
 
+        
+        
         
         # Execute all tickers in parallel
         tasks = [asyncio.create_task(_process_ticker(t)) for t in wsbt_counts.keys()]

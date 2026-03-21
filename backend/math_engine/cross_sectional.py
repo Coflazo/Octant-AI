@@ -20,6 +20,8 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+
+
 # --- Dataclasses ---
 
 @dataclass
@@ -49,12 +51,16 @@ class PCAResult:
 
 
 
+
+
+
+
 # --- Functions ---
 
 def run_ff5_regression(strategy_returns: pd.Series, ff5_factors: pd.DataFrame) -> Optional[FF5RegressionResult]:
     """runs ols ff5 regression with newey-west hac standard errors lol"""
     try:
-                # Align dates
+                                # Align dates
         df = pd.concat([strategy_returns, ff5_factors], axis=1).dropna()
         if len(df) < 30:
             return None
@@ -63,6 +69,8 @@ def run_ff5_regression(strategy_returns: pd.Series, ff5_factors: pd.DataFrame) -
         X = df.iloc[:, 1:]
         X = sm.add_constant(X)
         
+                
+                
                 
         # Newey-West lag heuristic: floor(4 * (T/100)^(2/9))
         T = len(df)
@@ -105,11 +113,15 @@ def run_rolling_alpha(strategy_returns: pd.Series, ff5_factors: pd.DataFrame, wi
         X_all = sm.add_constant(df.iloc[:, 1:])
         
                 
+                
+                
         # Rolling regression
         for i in range(window_days, len(df)):
             y_win = y_all.iloc[i-window_days:i]
             X_win = X_all.iloc[i-window_days:i, :]
             
+                        
+                        
                         
             # fast fit, no HAC needed per window unless requested
             try:
@@ -123,13 +135,17 @@ def run_rolling_alpha(strategy_returns: pd.Series, ff5_factors: pd.DataFrame, wi
         alpha_series = pd.Series(alphas, index=dates)
         
                 
+                
+                
         # Rolling Sharpe of the Alpha Series
-                # SR_alpha = avg(alpha) / std(alpha) * sqrt(252)
+                                # SR_alpha = avg(alpha) / std(alpha) * sqrt(252)
         roll_alpha_mean = alpha_series.rolling(window_days).mean()
         roll_alpha_std = alpha_series.rolling(window_days).std()
         
         roll_sharpe = (roll_alpha_mean / roll_alpha_std) * np.sqrt(252)
         
+                
+                
                 
         # Simple heuristic to flag decay: recent 3m alpha < avg 12m alpha - 1 stdev
         alpha_decay = False
@@ -163,13 +179,15 @@ def detect_marchenko_pastur_noise(eigenvalues: np.ndarray, n_assets: int, n_peri
         
     q = n_assets / n_periods
     if q > 1:
-                # q should ideally be < 1, but PCA can still be computed.
-                # Handling T < N by bounding q.
+                                # q should ideally be < 1, but PCA can still be computed.
+                                # Handling T < N by bounding q.
         pass
         
             
+            
+            
     # Assume sigma^2 = 1.0 since PCA operates on standardized correlation matrices
-        # Alternatively estimate sigma^2 from the median eigenvalue 
+                # Alternatively estimate sigma^2 from the median eigenvalue 
     sigma_sq = 1.0 
     
     lambda_max = sigma_sq * (1 + np.sqrt(q))**2
@@ -189,7 +207,7 @@ def run_pca(return_matrix: pd.DataFrame) -> Optional[PCAResult]:
         return None
 
     try:
-                # Standardize returns
+                                # Standardize returns
         rets_norm = (df - df.mean()) / df.std()
         
         pca = PCA()
