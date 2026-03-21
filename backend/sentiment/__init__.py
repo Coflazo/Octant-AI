@@ -1,1 +1,1 @@
-"""Octant AI — Sentiment signal construction from social and options flow data."""
+"""octant ai — sentiment signal construction from social and options flow data lol"""

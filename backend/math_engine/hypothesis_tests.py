@@ -1,9 +1,6 @@
 """
-Octant AI — Math Engine: Hypothesis Tests
-
-Enforces academic rigor via Bootstrapped Sharpe Ratios, Bayes-Adjusted Sharpe,
-and p-value correction frameworks (Bonferroni / Benjamini-Hochberg) to prevent
-multiple comparison bias across concurrent trading model searches.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import logging
@@ -15,6 +12,7 @@ import pandas as pd
 from scipy import stats
 
 logger = logging.getLogger(__name__)
+
 
 # --- Dataclasses ---
 
@@ -32,10 +30,12 @@ class BootstrapResult:
     p_value_vs_zero: float
 
 
+
+
 # --- Core Algorithms ---
 
 def run_t_test(returns: pd.Series) -> TTestResult:
-    """Computes basic one-sided and two-sided t-stats over strategy returns."""
+    """computes basic one-sided and two-sided t-stats over strategy returns lol"""
     rets = returns.dropna()
     N = len(rets)
     if N < 2 or rets.std() == 0:
@@ -58,7 +58,7 @@ def run_t_test(returns: pd.Series) -> TTestResult:
 
 
 def run_bootstrap_sharpe(returns: pd.Series, n_bootstrap: int = 10000) -> BootstrapResult:
-    """Non-parametric block sampling with replacement to test Sharpe distribution."""
+    """non-parametric block sampling with replacement to test sharpe distribution lol"""
     rets = returns.dropna().values
     N = len(rets)
     if N < 30:
@@ -71,24 +71,29 @@ def run_bootstrap_sharpe(returns: pd.Series, n_bootstrap: int = 10000) -> Bootst
         
     obs_sharpe = (obs_mean / obs_std) * np.sqrt(252)
     
+        
     # We enforce the null hypothesis that true mean return = 0 by centering the distribution
     centered_rets = rets - obs_mean
     
+        
     # Bootstrapping
-    # Generating indices mapping array
+        # Generating indices mapping array
     indices = np.random.randint(0, N, size=(n_bootstrap, N))
     sampled = centered_rets[indices]
     
     means = np.mean(sampled, axis=1)
     stds = np.std(sampled, axis=1, ddof=1)
     
+        
     # Handle zero-std paths to avoid division by zero
     stds[stds == 0] = 1e-8
     null_sharpes = (means / stds) * np.sqrt(252)
     
+        
     # P-value = fraction of null sharpes matching or exceeding our observed
     p_val = np.sum(null_sharpes >= obs_sharpe) / n_bootstrap
     
+        
     # Get 95% CI of the ACTUALLY observed distribution (from non-centered sampling)
     real_sampled = rets[indices]
     real_means = np.mean(real_sampled, axis=1)
@@ -106,14 +111,14 @@ def run_bootstrap_sharpe(returns: pd.Series, n_bootstrap: int = 10000) -> Bootst
     )
 
 def apply_bonferroni(p_values: List[float], alpha: float = 0.05) -> List[bool]:
-    """Strict Family-Wise Error Rate control."""
+    """strict family-wise error rate control lol"""
     N = len(p_values)
     if N == 0: return []
     threshold = alpha / N
     return [p <= threshold for p in p_values]
 
 def apply_benjamini_hochberg(p_values: List[float], alpha: float = 0.05) -> List[bool]:
-    """False Discovery Rate (FDR) control via classical step-up procedure."""
+    """false discovery rate (fdr) control via classical step-up procedure lol"""
     N = len(p_values)
     if N == 0: return []
     
@@ -122,6 +127,7 @@ def apply_benjamini_hochberg(p_values: List[float], alpha: float = 0.05) -> List
     
     thresholds = (np.arange(1, N + 1) / N) * alpha
     
+        
     # Find the largest k where p_k <= (k/N)*alpha
     k = 0
     for i in range(N - 1, -1, -1):
@@ -141,9 +147,11 @@ def compute_bayesian_adjusted_sharpe(sample_sharpe: float, n_periods: int, prior
     """
     if n_periods == 0: return prior_mean
     
+        
     # Precision is 1/variance
     prior_prec = 1.0 / (prior_std**2)
     
+        
     # In standard SR approximations, variance error ≈ 1/n_periods
     likelihood_prec = n_periods / 1.0 # assumes variance scalar = 1
     
@@ -153,7 +161,7 @@ def compute_bayesian_adjusted_sharpe(sample_sharpe: float, n_periods: int, prior
     return float(post_mean)
 
 def label_significance(bonferroni_pass: bool, bh_pass: bool) -> str:
-    """Helper to convert FWER and FDR indicators to string labels."""
+    """helper to convert fwer and fdr indicators to string labels lol"""
     if bonferroni_pass:
         return "strongly significant"
     elif bh_pass:

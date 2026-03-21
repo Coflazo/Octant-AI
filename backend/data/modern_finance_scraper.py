@@ -1,9 +1,6 @@
 """
-Octant AI — Data Layer: Modern Finance Scraper
-
-Headless scraper for the Modern Finance journal. Navigates the publication,
-downloads open-access PDF links, extracts raw text using PyMuPDF (fitz),
-and processes the content through Gemini Flash for structured data.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import asyncio
@@ -19,7 +16,7 @@ from backend.data.literature_sources import PaperObject
 logger = logging.getLogger(__name__)
 
 class ModernFinanceScraper:
-    """Scrapes and parses PDF articles from the Modern Finance journal."""
+    """scrapes and parses pdf articles from the modern finance journal lol"""
 
     def __init__(self, gemini_client):
         self.gemini = gemini_client
@@ -48,22 +45,26 @@ class ModernFinanceScraper:
             logger.warning("Playwright, PyMuPDF (fitz), or httpx not installed. Skipping Modern Finance scrape.")
             return papers
 
+        
         # Note: We mock the specific URL traversal logic to prevent live scraping against arbitrary targets 
-        # during integration checks, but the architecture (Playwright -> Download -> Fitz -> Gemini) is fully implemented.
+                # during integration checks, but the architecture (Playwright -> Download -> Fitz -> Gemini) is fully implemented.
         try:
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
                 page = await browser.new_page()
                 
+                                
                 # Mock: navigating to journal
                 await page.goto("https://arxiv.org", wait_until="domcontentloaded")
                 await asyncio.sleep(random.uniform(2, 4))
                 
+                                
                 # Assume Playwright extracted an article link containing a PDF
-                # We substitute a publicly available dummy PDF for testing text extraction
+                                # We substitute a publicly available dummy PDF for testing text extraction
                 mock_pdf_url = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
                 local_path = f"{self.download_dir}/dummy_finance_article.pdf"
 
+                
                 # Download PDF bytes
                 async with httpx.AsyncClient() as client:
                     resp = await client.get(mock_pdf_url, follow_redirects=True)
@@ -71,6 +72,7 @@ class ModernFinanceScraper:
                         with open(local_path, "wb") as f:
                             f.write(resp.content)
                             
+                                            
                 # Extract Text with PyMuPDF (fitz)
                 doc = fitz.open(local_path)
                 full_text = ""
@@ -79,8 +81,8 @@ class ModernFinanceScraper:
                 doc.close()
                 
                 if full_text:
-                    # Pass to Gemini Flash for structured extraction
-                    # We trim the text to avoid typical token limits on full papers in this stub
+                                        # Pass to Gemini Flash for structured extraction
+                                        # We trim the text to avoid typical token limits on full papers in this stub
                     extracted = await self._gemini_extract(full_text[:15000])
                     if extracted:
                         papers.append(extracted)
@@ -92,7 +94,7 @@ class ModernFinanceScraper:
         return papers
 
     async def _gemini_extract(self, raw_text: str) -> PaperObject:
-        """Run extracted PDF text through Gemini Flash."""
+        """run extracted pdf text through gemini flash lol"""
         prompt = f"""
         Analyze this raw text extracted from a financial research PDF.
         Extract structured metadata as JSON:

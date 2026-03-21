@@ -1,8 +1,6 @@
 """
-Octant AI — External Pulse Aggregator
-
-Probes API endpoints (Gemini, Reson8, Fal.ai) and local system dependencies 
-(pdflatex, chromadb) to supply a unified matrix status via FastAPI `/health`.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 from fastapi import APIRouter
@@ -14,9 +12,10 @@ import shutil
 router = APIRouter()
 
 async def check_dependencies():
-    """Concurrently sweeps external and local states."""
+    """concurrently sweeps external and local states lol"""
     checks = []
     
+        
     # pdflatex check
     t0 = time.time()
     pdf_bin = shutil.which("pdflatex")
@@ -26,6 +25,7 @@ async def check_dependencies():
         "latency_ms": round((time.time() - t0) * 1000, 2)
     })
     
+        
     # Dummy async check for APIs (Mocking external ping)
     t0 = time.time()
     await asyncio.sleep(0.01) # Simulating socket bind
@@ -51,7 +51,7 @@ async def check_dependencies():
 
 @router.get("/health")
 async def health_check():
-    """Main routing heartbeat."""
+    """main routing heartbeat lol"""
     checks = await check_dependencies()
     
     system_status = "ok"

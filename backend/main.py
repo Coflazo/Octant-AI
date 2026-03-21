@@ -1,11 +1,6 @@
 """
-Octant AI — FastAPI Application Entry Point.
-
-Creates the FastAPI app with CORS middleware, mounts static file serving
-for generated reports, registers API routers for the pipeline, voice, and
-reports endpoints, and defines the WebSocket endpoint for the PULSE
-real-time event protocol. The ConnectionManager class handles per-session
-WebSocket lifecycle (connect, disconnect, send, broadcast).
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import logging
@@ -22,9 +17,12 @@ from backend.pulse import ConnectionManager
 
 logger = logging.getLogger(__name__)
 
+
 # ── Global singleton connection manager ──────────────────────────────────
 
 manager = ConnectionManager()
+
+
 
 
 # ── Lifespan context manager ─────────────────────────────────────────────
@@ -49,6 +47,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         settings.cors_origin_list,
     )
 
+    
     # Ensure output directories exist
     import os
     os.makedirs(settings.REPORTS_OUTPUT_PATH, exist_ok=True)
@@ -56,11 +55,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     yield
 
+    
     # Graceful shutdown: close all WebSocket connections
     logger.info("Octant AI shutting down — disconnecting %d sessions", len(manager.active_connections))
     for session_id in list(manager.active_connections.keys()):
         await manager.disconnect(session_id)
     logger.info("Shutdown complete.")
+
+
 
 
 # ── FastAPI app ──────────────────────────────────────────────────────────
@@ -71,6 +73,7 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
 
 # ── CORS middleware ──────────────────────────────────────────────────────
 
@@ -83,6 +86,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # ── Mount static files for generated reports ─────────────────────────────
 
 import os
@@ -93,6 +97,7 @@ if os.path.isdir(settings.REPORTS_OUTPUT_PATH):
         name="reports",
     )
 
+
 # ── Register API routers ────────────────────────────────────────────────
 
 from backend.routers.pipeline import router as pipeline_router
@@ -102,6 +107,8 @@ from backend.routers.reports import router as reports_router
 app.include_router(pipeline_router, prefix="/api/pipeline", tags=["Pipeline"])
 app.include_router(voice_router, prefix="/api/voice", tags=["Voice"])
 app.include_router(reports_router, prefix="/api/reports", tags=["Reports"])
+
+
 
 
 # ── WebSocket endpoint — PULSE protocol ─────────────────────────────────
@@ -125,24 +132,24 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str) -> None:
 
     try:
         while True:
-            # Keep the connection alive and receive any client messages
-            # (e.g., binary audio chunks for voice transcription, control messages)
+                        # Keep the connection alive and receive any client messages
+                        # (e.g., binary audio chunks for voice transcription, control messages)
             data = await websocket.receive()
 
             if "text" in data:
-                # Text messages are control commands (e.g., stop, restart)
+                                # Text messages are control commands (e.g., stop, restart)
                 text = data["text"]
                 logger.debug("WebSocket text received — session=%s, msg=%s", session_id, text[:100])
 
             elif "bytes" in data:
-                # Binary messages are audio chunks for Reson8 transcription
+                                # Binary messages are audio chunks for Reson8 transcription
                 audio_chunk = data["bytes"]
                 logger.debug(
                     "WebSocket audio chunk received — session=%s, bytes=%d",
                     session_id,
                     len(audio_chunk),
                 )
-                # Audio processing is handled by the voice router subscription
+                                # Audio processing is handled by the voice router subscription
                 await manager.handle_audio_chunk(session_id, audio_chunk)
 
     except WebSocketDisconnect:

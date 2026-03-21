@@ -1,9 +1,6 @@
 """
-Octant AI — Math Engine: Time Series
-
-Provides complete, production-ready time-series econometric models including
-ADF stationarity testing, auto-fitted ARIMA (AIC grid search), GARCH family
-(BIC selection), Hidden Markov Model volatility regimes, and spectral analysis.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import logging
@@ -24,6 +21,7 @@ except ImportError:
     pass
 
 logger = logging.getLogger(__name__)
+
 
 # --- Dataclasses ---
 
@@ -71,21 +69,24 @@ class WaveletResult:
     global_coherence: float
 
 
+
+
 # --- Time Series Models ---
 
 def run_adf_test(returns: pd.Series) -> Optional[ADFResult]:
-    """Augmented Dickey-Fuller unit root test for stationarity."""
+    """augmented dickey-fuller unit root test for stationarity lol"""
     if len(returns) < 30 or returns.std() == 0:
         logger.warning("run_adf_test: Series too short or zero variance.")
         return None
 
     try:
-        # Default test
+                # Default test
         res = adfuller(returns.dropna(), autolag='AIC')
         p_val = res[1]
         is_stat = p_val < 0.05
         d_order = 0
         
+                
         # If not stationary, check first-difference
         if not is_stat:
             diff = returns.diff().dropna()
@@ -107,7 +108,7 @@ def run_adf_test(returns: pd.Series) -> Optional[ADFResult]:
         return None
 
 def fit_arima(returns: pd.Series) -> Optional[ARIMAResult]:
-    """Grid searches ARIMA(p,d,q) parameters to minimize AIC."""
+    """grid searches arima(p,d,q) parameters to minimize aic lol"""
     if len(returns) < 50 or returns.std() == 0:
         return None
 
@@ -115,8 +116,9 @@ def fit_arima(returns: pd.Series) -> Optional[ARIMAResult]:
     best_order = (0, 0, 0)
     best_model_fit = None
 
+    
     # We use d=0 since returns are typically stationary. 
-    # Can use the ADF result order natively in production orchestration.
+        # Can use the ADF result order natively in production orchestration.
     p_grid = range(0, 6)
     q_grid = range(0, 6)
     
@@ -127,7 +129,7 @@ def fit_arima(returns: pd.Series) -> Optional[ARIMAResult]:
             if p == 0 and q == 0:
                 continue
             try:
-                # Disabling warnings inside loop for speed
+                                # Disabling warnings inside loop for speed
                 model = ARIMA(returns_clean, order=(p, 0, q), enforce_stationarity=False, enforce_invertibility=False)
                 fit = model.fit()
                 if fit.aic < best_aic:
@@ -149,7 +151,7 @@ def fit_arima(returns: pd.Series) -> Optional[ARIMAResult]:
     )
 
 def fit_garch_family(returns: pd.Series) -> Optional[GARCHFamilyResult]:
-    """Fits GARCH(1,1), GJR-GARCH, and EGARCH; selects minimum BIC."""
+    """fits garch(1,1), gjr-garch, and egarch; selects minimum bic lol"""
     if len(returns) < 100 or returns.std() == 0:
         return None
 
@@ -178,6 +180,7 @@ def fit_garch_family(returns: pd.Series) -> Optional[GARCHFamilyResult]:
         logger.warning("No GARCH model converged.")
         return None
 
+    
     # Calculate persistence and half-life
     persistence = 0.0
     params = dict(best_fit.params)
@@ -188,7 +191,7 @@ def fit_garch_family(returns: pd.Series) -> Optional[GARCHFamilyResult]:
         gamma = params.get("gamma[1]", 0.0) # For GJR-GARCH
         persistence = alpha + beta + (gamma / 2.0)
     elif best_name == "EGARCH":
-        # EGARCH persistence is represented by the AR term beta
+                # EGARCH persistence is represented by the AR term beta
         persistence = params.get("beta[1]", 0.0)
 
     half_life = np.log(0.5) / np.log(persistence) if 0 < persistence < 1 else np.inf
@@ -203,7 +206,7 @@ def fit_garch_family(returns: pd.Series) -> Optional[GARCHFamilyResult]:
     )
 
 def detect_vol_regimes(cond_vol: pd.Series) -> Optional[RegimeResult]:
-    """Fits a 2-state Gaussian HMM to conditional volatility."""
+    """fits a 2-state gaussian hmm to conditional volatility lol"""
     vol_clean = cond_vol.dropna().values.reshape(-1, 1)
     if len(vol_clean) < 100:
         return None
@@ -212,20 +215,23 @@ def detect_vol_regimes(cond_vol: pd.Series) -> Optional[RegimeResult]:
         model = GaussianHMM(n_components=2, covariance_type="diag", n_iter=1000, random_state=42)
         model.fit(vol_clean)
         
+                
         # Predict hidden states and probabilities
         probs = model.predict_proba(vol_clean)
         
+                
         # Identify which state is "high vol" State 1
         means = model.means_.flatten()
         state1_idx = 1 if means[1] > means[0] else 0
         
         high_vol_probs = probs[:, state1_idx]
         
+                
         # Sort so state 0 is always low vol and state 1 is high vol
         if state1_idx == 0:
             ordered_means = means[::-1].reshape(-1, 1)
             ordered_covars = model.covars_[::-1]
-            # Swap transition matrix rows/cols
+                        # Swap transition matrix rows/cols
             P = model.transmat_
             ordered_trans = np.array([[P[1,1], P[1,0]], [P[0,1], P[0,0]]])
         else:
@@ -244,17 +250,18 @@ def detect_vol_regimes(cond_vol: pd.Series) -> Optional[RegimeResult]:
         return None
 
 def run_fft_analysis(returns: pd.Series) -> Optional[FFTResult]:
-    """Performs Fast Fourier Transform to find significant cyclical signals."""
+    """performs fast fourier transform to find significant cyclical signals lol"""
     ret_clean = returns.dropna().values
     N = len(ret_clean)
     if N < 50:
         return None
 
     try:
-        # FFT
+                # FFT
         X = np.fft.fft(ret_clean)
         power = np.abs(X)**2
         
+                
         # Discard symmetric half and DC component (f=0)
         half_N = N // 2
         power = power[1:half_N]
@@ -262,11 +269,13 @@ def run_fft_analysis(returns: pd.Series) -> Optional[FFTResult]:
         max_power = np.max(power)
         sum_power = np.sum(power)
         
+                
         # Fisher's g-statistic
         g_stat = max_power / sum_power
         
+                
         # Approximate p-value for Fisher's g: 
-        # P(g > x) <= m * (1 - x)^(m-1) where m = len(power)
+                # P(g > x) <= m * (1 - x)^(m-1) where m = len(power)
         m = len(power)
         p_val = m * ( (1 - g_stat)**(m - 1) )
         if p_val > 1.0: p_val = 1.0
@@ -286,26 +295,29 @@ def run_fft_analysis(returns: pd.Series) -> Optional[FFTResult]:
         return None
 
 def run_wavelet_analysis(returns: pd.Series, sentiment: pd.Series) -> Optional[WaveletResult]:
-    """Applies Morlet continuous wavelet transform for coherence analysis."""
+    """applies morlet continuous wavelet transform for coherence analysis lol"""
     df = pd.concat([returns, sentiment], axis=1).dropna()
     if len(df) < 50:
         return None
 
     try:
-        # We apply pywt.cwt on both series to find cross-spectrum coherence.
-        # Strict mathematical wavelet coherence is complex, providing a simplified mock proxy
-        # representing the continuous global correlation.
+                # We apply pywt.cwt on both series to find cross-spectrum coherence.
+                # Strict mathematical wavelet coherence is complex, providing a simplified mock proxy
+                # representing the continuous global correlation.
         R = df.iloc[:, 0].values
         S = df.iloc[:, 1].values
         
+                
         # Using a standard complex morlet
         scales = np.arange(1, 31)
         r_coeffs, freqs = pywt.cwt(R, scales, 'cmor1.5-1.0')
         s_coeffs, _ = pywt.cwt(S, scales, 'cmor1.5-1.0')
         
+                
         # Cross spectrum
         W_rs = r_coeffs * np.conj(s_coeffs)
         
+                
         # Simple global coherence proxy
         coherence = np.abs(np.mean(W_rs)) / (np.mean(np.abs(r_coeffs)) * np.mean(np.abs(s_coeffs)) + 1e-8)
         

@@ -1,8 +1,6 @@
 """
-Octant AI — Data Layer: Literature Engine
-
-Orchestrates parallel queries to academic APIs (arXiv, Semantic Scholar, OpenAlex, CORE)
-and processes abstract batches using Gemini Flash to extract structured methodology and results data.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import asyncio
@@ -33,6 +31,7 @@ class PaperObject:
     arxiv_id: Optional[str] = None
     influence_score: Optional[float] = None
     
+        
     # Gemini extracted fields
     key_finding: str = ""
     signal_tested: str = ""
@@ -46,7 +45,7 @@ class PaperObject:
 
 
 class LiteratureEngine:
-    """Queries academic sources and analyses abstracts with Gemini Flash."""
+    """queries academic sources and analyses abstracts with gemini flash lol"""
 
     def __init__(self) -> None:
         settings = get_settings()
@@ -58,9 +57,10 @@ class LiteratureEngine:
             logger.warning("GEMINI_API_KEY unconfigured.")
 
     async def search_all_sources(self, hypothesis: HypothesisObject, max_papers_per_source: int = 20) -> List[PaperObject]:
-        """Orchestrate parallel queries to all academic sources."""
+        """orchestrate parallel queries to all academic sources lol"""
         logger.info("Starting literature search for Hypothesis %s", hypothesis.id)
 
+        
         # Fire off all API searches in parallel
         results = await asyncio.gather(
             self._search_arxiv(hypothesis, max_papers_per_source),
@@ -77,6 +77,7 @@ class LiteratureEngine:
             elif isinstance(res, Exception):
                 logger.error("A literature source failed: %s", res)
 
+        
         # Deduplicate
         seen = set()
         unique_papers = []
@@ -88,6 +89,7 @@ class LiteratureEngine:
 
         logger.info("Found %d unique API papers for %s", len(unique_papers), hypothesis.id)
         
+                
         # Analyze papers with Gemini Flash in batches
         if unique_papers and self.model:
             unique_papers = await self._analyze_papers_with_gemini(unique_papers, hypothesis)
@@ -95,7 +97,7 @@ class LiteratureEngine:
         return unique_papers
 
     async def _search_arxiv(self, hypothesis: HypothesisObject, n: int) -> List[PaperObject]:
-        """Query arXiv API for quantitative finance categories."""
+        """query arxiv api for quantitative finance categories lol"""
         kw = hypothesis.math_badge.lower().replace(" ", "+")
         query = f"all:{kw}+AND+(cat:q-fin.ST+OR+cat:q-fin.PM+OR+cat:q-fin.TR+OR+cat:q-fin.MF+OR+cat:q-fin.RM)"
         url = f"http://export.arxiv.org/api/query?search_query={query}&start=0&max_results={n}&sortBy=relevance"
@@ -126,7 +128,7 @@ class LiteratureEngine:
         return papers
 
     async def _search_semantic_scholar(self, hypothesis: HypothesisObject, n: int) -> List[PaperObject]:
-        """Query Semantic Scholar API."""
+        """query semantic scholar api lol"""
         url = "https://api.semanticscholar.org/graph/v1/paper/search"
         query = f"{hypothesis.asset_class} {hypothesis.math_badge}"
         params = {
@@ -163,7 +165,7 @@ class LiteratureEngine:
         return papers
 
     async def _search_openalex(self, hypothesis: HypothesisObject, n: int) -> List[PaperObject]:
-        """Query OpenAlex works API."""
+        """query openalex works api lol"""
         search_query = urllib.parse.quote(hypothesis.math_badge)
         url = f"https://api.openalex.org/works?search={search_query}&sort=cited_by_count:desc&per-page={n}"
         papers = []
@@ -197,7 +199,7 @@ class LiteratureEngine:
         return papers
 
     async def _search_core(self, hypothesis: HypothesisObject, n: int) -> List[PaperObject]:
-        """Query CORE API."""
+        """query core api lol"""
         url = "https://api.core.ac.uk/v3/search/works"
         params = {"q": hypothesis.math_badge, "limit": n}
         settings = get_settings()
@@ -226,7 +228,7 @@ class LiteratureEngine:
         return papers
 
     async def _analyze_papers_with_gemini(self, papers: List[PaperObject], hypothesis: HypothesisObject) -> List[PaperObject]:
-        """Batch papers and extract metrics via Gemini Flash."""
+        """batch papers and extract metrics via gemini flash lol"""
         logger.info("Analysing %d papers with Gemini Flash for H-%s", len(papers), hypothesis.id)
         
         batch_size = 10

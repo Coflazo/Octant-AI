@@ -1,9 +1,6 @@
 """
-Octant AI — Pipeline Router
-
-Maps standard HTTPS `POST /api/pipeline/start`, `POST /api/pipeline/stop/{session_id}`
-REST abstractions down to the Background Orchestrator thread and 
-interacts directly with the state dicts tracked by the `SessionManager`.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import asyncio
@@ -32,7 +29,7 @@ class PipelineStartPayload(BaseModel):
 
 
 def background_pipeline_runner(request: PipelineRequest, pulse: PulseEmitter):
-    """Executes the master pipeline synchronously on the FastAPI background execution threads."""
+    """executes the master pipeline synchronously on the fastapi background execution threads lol"""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
@@ -45,7 +42,7 @@ def background_pipeline_runner(request: PipelineRequest, pulse: PulseEmitter):
 
 @router.post("/start")
 async def start_pipeline(payload: PipelineStartPayload, background_tasks: BackgroundTasks):
-    """Validates parameters, generates state structs, and issues unblocking OS worker."""
+    """validates parameters, generates state structs, and issues unblocking os worker lol"""
     session_id = payload.session_id
     if not payload.thesis or not payload.time_range or len(payload.time_range) != 2:
         raise HTTPException(status_code=400, detail="Invalid target time series or missing thesis params.")
@@ -62,6 +59,7 @@ async def start_pipeline(payload: PipelineStartPayload, background_tasks: Backgr
         sector=payload.sector
     )
     
+        
     # Hand off standard execution mapping back to the Async loop worker pool
     background_tasks.add_task(background_pipeline_runner, request, pulse)
     
@@ -70,7 +68,7 @@ async def start_pipeline(payload: PipelineStartPayload, background_tasks: Backgr
 
 @router.post("/stop/{session_id}")
 async def stop_pipeline(session_id: str):
-    """Interferes with the execution thread by emitting the explicit Event loop boolean."""
+    """interferes with the execution thread by emitting the explicit event loop boolean lol"""
     state = await session_manager.get(session_id)
     if not state:
         raise HTTPException(status_code=404, detail="Pipeline target not identifiable.")
@@ -83,7 +81,7 @@ async def stop_pipeline(session_id: str):
 
 @router.get("/reports/{filename}")
 async def fetch_pdf(filename: str):
-    """Safely serves the resulting generative report to HTTP targets via streaming FileResponses."""
+    """safely serves the resulting generative report to http targets via streaming fileresponses lol"""
     import os
     target_path = os.path.join("/tmp/octant_reports", filename)
     

@@ -1,12 +1,10 @@
 """
-Octant AI — Custom Exception Protocols
-
-Provides tightly scoped error classes mapped to explicit Pulse Event UI
-feedback, allowing the orchestrator to fail gracefully or suggest recovery options.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 class OctantBaseError(Exception):
-    """Root application exception conveying recovery context."""
+    """root application exception conveying recovery context lol"""
     def __init__(self, message: str, recovery_action: str = "Contact support or restart the pipeline."):
         super().__init__(message)
         self.recovery_action = recovery_action

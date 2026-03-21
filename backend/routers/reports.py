@@ -1,9 +1,6 @@
 """
-Octant AI — Reports API Router.
-
-Serves compiled PDF reports from the reports output directory.
-Provides a listing endpoint and a download endpoint with proper
-Content-Type and Content-Disposition headers for browser downloads.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import logging
@@ -66,7 +63,7 @@ async def download_report(filename: str) -> FileResponse:
     Raises:
         HTTPException: If the filename is not found or contains path traversal.
     """
-    # Guard against path traversal
+        # Guard against path traversal
     if ".." in filename or "/" in filename or "\\" in filename:
         raise HTTPException(status_code=400, detail="Invalid filename")
 

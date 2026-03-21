@@ -1,1 +1,1 @@
-"""Octant AI — Voice input via Reson8 streaming transcription API."""
+"""octant ai — voice input via reson8 streaming transcription api lol"""

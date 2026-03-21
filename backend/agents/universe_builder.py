@@ -1,8 +1,6 @@
 """
-Octant AI — Agent 3: Universe Builder
-
-Orchestrates the data acquisition phase across market prices, fundamental ratios,
-and social sentiment to build the master dataset used by the dual backtesting engines.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import asyncio
@@ -26,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class UniverseTooSmallError(Exception):
-    """Raised when liquidity screens reduce the equity universe below the statistical threshold."""
+    """raised when liquidity screens reduce the equity universe below the statistical threshold lol"""
     pass
 
 
@@ -41,7 +39,7 @@ class UniverseBuildResult:
 
 
 class UniverseBuilder:
-    """Agent 3: Universe Builder."""
+    """agent 3: universe builder lol"""
 
     def __init__(self, gemini_client):
         self.gemini = gemini_client
@@ -74,6 +72,7 @@ class UniverseBuilder:
         """
         start_date, end_date = time_range
         
+                
         # 1. Emit PULSE Status Active
         await pulse.emit_status(
             agent="universe",
@@ -86,11 +85,13 @@ class UniverseBuilder:
             estimated_remaining_sec=120
         )
 
+        
         # 2. Extract inference constraints from hypotheses
-        # A simple consensus check over the hypotheses for dynamic sector hints
+                # A simple consensus check over the hypotheses for dynamic sector hints
         dynamic_sectors = set(h.asset_class for h in hypothesis_list if h.asset_class)
         logger.info("Hypothesis implicit asset classes: %s", dynamic_sectors)
 
+        
         # 3. Fetch candidate tickers
         candidate_tickers = await self.price_fetcher.fetch_universe_tickers(
             exchanges=exchanges,
@@ -98,9 +99,11 @@ class UniverseBuilder:
             max_tickers=50  # Capped for safety during beta
         )
 
+        
         # 4. Emit PULSE Progress
         await pulse.emit_status("universe", "active", 2, 10, "Fetching Market Data", f"Checking {len(candidate_tickers)} candidates", 20, 100)
 
+        
         # 5. Download OHLCV Data
         raw_prices = await self.price_fetcher.fetch_ohlcv(
             tickers=candidate_tickers,
@@ -108,6 +111,7 @@ class UniverseBuilder:
             end_date=end_date
         )
 
+        
         # 6. Apply Liquidity Screen
         await pulse.emit_status("universe", "active", 3, 10, "Applying Liquidity Screens", "Min $1.00 & 500k Adv/Vol", 30, 90)
         clean_prices = self.price_fetcher.apply_liquidity_screen(
@@ -122,6 +126,7 @@ class UniverseBuilder:
             await pulse.emit_error("universe", err_msg, "Expand your exchange selection or alter sector filters.")
             raise UniverseTooSmallError(err_msg)
 
+        
         # 7. Fetch Fundamentals
         await pulse.emit_status("universe", "active", 5, 10, "Pulling Fundamentals", "Retrieving metrics via OpenBB", 50, 70)
         
@@ -129,7 +134,7 @@ class UniverseBuilder:
             self.fundamentals.get_short_interest(surviving_tickers),
             self.fundamentals.get_sector_classification(surviving_tickers),
             self.fundamentals.get_market_caps(surviving_tickers),
-            # self.fundamentals.get_earnings_dates(surviving_tickers),
+                        # self.fundamentals.get_earnings_dates(surviving_tickers),
             self.fundamentals.get_macro_indicators(),
             return_exceptions=True
         )
@@ -140,6 +145,7 @@ class UniverseBuilder:
         mkt_caps = fin_results[2] if isinstance(fin_results[2], dict) else {}
         macro_indicators = fin_results[3] if isinstance(fin_results[3], dict) else {}
 
+        
         # 8. Emit ticker_card PULSE events (with fal.ai fallback) -> Concurrency!
         await pulse.emit_status("universe", "active", 6, 10, "Rendering Ticker Cards", "Calling fal.ai flux-pro", 60, 50)
         
@@ -164,6 +170,7 @@ class UniverseBuilder:
         emit_tasks = [asyncio.create_task(_emit_ticker(t)) for t in surviving_tickers]
         await asyncio.gather(*emit_tasks, return_exceptions=True)
 
+        
         # 9. Concurrently run Sentiment Scrapers
         await pulse.emit_status("universe", "active", 7, 10, "Scraping Social Sentiment", "Reddit Playwright + WSBTrends", 70, 40)
         sentiment_fetch_tasks = await asyncio.gather(
@@ -174,6 +181,7 @@ class UniverseBuilder:
         wsbt_counts = sentiment_fetch_tasks[0] if isinstance(sentiment_fetch_tasks[0], dict) else {}
         reddit_posts = sentiment_fetch_tasks[1] if isinstance(sentiment_fetch_tasks[1], list) else []
 
+        
         # 10. Build sentiment signals
         await pulse.emit_status("universe", "active", 8, 10, "Constructing Sentiment Signals", "Gemini 2.5 NLP Extraction", 80, 20)
         sentiment_signals = await self.sentiment_constructor.build_signal(
@@ -182,13 +190,16 @@ class UniverseBuilder:
             gemini_client=self.gemini
         )
 
+        
         # 11. Fetch FF5 factors
         await pulse.emit_status("universe", "active", 9, 10, "Pulling Fama-French", "Downloading FF5 2x3 Daily", 90, 10)
         ff5_factors = await fetch_ff5_factors(start_date, end_date)
 
+        
         # 12. Compute log returns
         log_returns = self.price_fetcher.compute_log_returns(clean_prices)
 
+        
         # 13. Assemble the Universe DataFrame
         universe_data = []
         for t in surviving_tickers:
@@ -206,6 +217,7 @@ class UniverseBuilder:
             })
         universe_df = pd.DataFrame(universe_data).set_index("ticker")
 
+        
         # 14. Complete
         await pulse.emit_status("universe", "complete", 10, 10, "Universe Generated", f"{len(surviving_tickers)} distinct assets processed.", 100, 0)
         logger.info("Agent 3 Universe Builder complete. Survived: %d", len(surviving_tickers))

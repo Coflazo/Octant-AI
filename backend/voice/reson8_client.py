@@ -1,9 +1,6 @@
 """
-Octant AI — Reson8 Streaming Transcription Client.
-
-Provides the Reson8Client class an async HTTP client that sends chunked
-audio upstream to the Reson8 API while streaming partial transcript strings
-downstream. Includes RMS-based end-of-speech (silence) detection.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import asyncio
@@ -20,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class Reson8Error(Exception):
-    """Raised when the Reson8 API returns an error or rate limit."""
+    """raised when the reson8 api returns an error or rate limit lol"""
     pass
 
 
@@ -33,7 +30,7 @@ class Reson8Client:
     """
 
     def __init__(self) -> None:
-        """Initialise the client with config settings."""
+        """initialise the client with config settings lol"""
         settings = get_settings()
         self.api_key = settings.RESON8_API_KEY
         self.base_url = settings.RESON8_BASE_URL.rstrip("/")
@@ -56,16 +53,18 @@ class Reson8Client:
             return True
 
         try:
-            # Treat bytes as 16-bit little-endian PCM
-            # (Note: if frontend sends WebM, this serves as a proxy metric or
-            # requires extraction. For this implementation we calculate the raw RMS)
+                        # Treat bytes as 16-bit little-endian PCM
+                        # (Note: if frontend sends WebM, this serves as a proxy metric or
+                        # requires extraction. For this implementation we calculate the raw RMS)
             samples = np.frombuffer(audio_chunk, dtype=np.int16)
             if len(samples) == 0:
                 return True
 
+            
             # Convert to float and normalise to [-1.0, 1.0]
             float_samples = samples.astype(np.float32) / 32768.0
 
+            
             # Calculate RMS amplitude
             rms = math.sqrt(np.mean(float_samples**2))
             return bool(rms < threshold)
@@ -94,7 +93,7 @@ class Reson8Client:
         """
         if not self.api_key:
             logger.warning("Reson8 API key unconfigured — returning mock stream.")
-            # For development without a key, yield mock responses
+                        # For development without a key, yield mock responses
             yield "this is a mock "
             await asyncio.sleep(0.5)
             yield "transcription of the "
@@ -108,6 +107,7 @@ class Reson8Client:
             "Content-Type": "audio/webm",  # Matches browser MediaRecorder output
         }
 
+        
         # Reson8 API specific limits
         MAX_RETRIES = 3
         retry_delay = 1.0
@@ -126,12 +126,14 @@ class Reson8Client:
                                 f"Reson8 HTTP {response.status_code}: {err_text.decode('utf-8', errors='ignore')}"
                             )
 
+                        
                         # Stream the response lines back to the caller
-                        # Assuming Reson8 returns line-delimited text payloads
+                                                # Assuming Reson8 returns line-delimited text payloads
                         async for line in response.aiter_lines():
                             if line and line.strip():
                                 yield line.strip()
 
+                
                 # If successful, exit the retry loop
                 break
 

@@ -1,7 +1,6 @@
 """
-Octant AI — Data Layer: SSRN Scraper
-
-Playwright-based headless scraper for retrieving abstracts from SSRN.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import asyncio
@@ -15,7 +14,7 @@ from backend.data.literature_sources import PaperObject
 logger = logging.getLogger(__name__)
 
 class SSRNScraper:
-    """Scrapes abstract pages from SSRN using headless Playwright."""
+    """scrapes abstract pages from ssrn using headless playwright lol"""
     
     async def search(self, hypothesis: HypothesisObject, n: int) -> List[PaperObject]:
         """Navigate SSRN and extract paper details.
@@ -36,13 +35,15 @@ class SSRNScraper:
             logger.warning("Playwright not installed, skipping SSRN scrape.")
             return papers
         
+                
         # Searching SSRN dynamically often requires interacting with their JS frontend
-        # and navigating captchas.
+                # and navigating captchas.
         try:
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
                 page = await browser.new_page()
                 
+                                
                 # Mock the navigation flow to prevent IP bans during normal testing
                 await page.goto("https://papers.ssrn.com/sol3/DisplayAbstractSearch.cfm", wait_until="domcontentloaded")
                 await asyncio.sleep(random.uniform(3, 6)) # Randomised delay per spec

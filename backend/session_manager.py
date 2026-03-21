@@ -1,9 +1,6 @@
 """
-Octant AI — Backend Session Manager
-
-Thread-safe, in-memory tracking of background orchestration tasks.
-Contains the cancellation token layer (`stop_flags`) and the global pipeline
-repository required by the React Frontend grids.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import asyncio
@@ -28,14 +25,14 @@ class SessionState:
 
 
 class SessionManager:
-    """Singleton memory pool managing all active quant jobs."""
+    """singleton memory pool managing all active quant jobs lol"""
 
     def __init__(self):
         self._lock = asyncio.Lock()
         self._sessions: Dict[str, SessionState] = {}
 
     async def create(self, session_id: str) -> None:
-        """Initialises a tracking struct for a new pipeline iteration."""
+        """initialises a tracking struct for a new pipeline iteration lol"""
         async with self._lock:
             if session_id in self._sessions:
                 logger.warning("Session %s already exists, overwriting.", session_id)
@@ -43,12 +40,12 @@ class SessionManager:
             logger.info("Session %s created.", session_id)
 
     async def get(self, session_id: str) -> Optional[SessionState]:
-        """Retrieves current session state struct."""
+        """retrieves current session state struct lol"""
         async with self._lock:
             return self._sessions.get(session_id)
 
     async def update(self, session_id: str, **kwargs) -> None:
-        """Dynamically patches fields on the session tracker."""
+        """dynamically patches fields on the session tracker lol"""
         async with self._lock:
             state = self._sessions.get(session_id)
             if state:
@@ -57,15 +54,16 @@ class SessionManager:
                         setattr(state, key, value)
 
     async def delete(self, session_id: str) -> None:
-        """Hard removes the session from memory."""
+        """hard removes the session from memory lol"""
         async with self._lock:
             if session_id in self._sessions:
                 del self._sessions[session_id]
 
     async def list_active(self) -> List[str]:
-        """Returns array of active running session IDs."""
+        """returns array of active running session ids lol"""
         async with self._lock:
             return [sid for sid, state in self._sessions.items() if state.status == "running"]
+
 
 # Global Singleton
 session_manager = SessionManager()

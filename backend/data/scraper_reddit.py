@@ -1,9 +1,6 @@
 """
-Octant AI — Sentiment Data: Playwright Reddit Scraper
-
-Headless React SPA scraper targeting r/wallstreetbets and similar subreddits.
-Extracts post and comment text for downstream NLP sentiment pipeline.
-Uses dynamic scrolling and robust regex ticker extraction based on the provided script.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import asyncio
@@ -36,12 +33,14 @@ class RedditPost:
     top_comments: List[RedditComment] = field(default_factory=list)
 
 
+
+
 # Regex that matches standalone uppercase word (potential ticker)
 TICKER_RE = re.compile(r'\b([A-Z]{1,5})\b')
 
 
 class RedditScraper:
-    """Scrapes financial subreddits for sentiment signal construction."""
+    """scrapes financial subreddits for sentiment signal construction lol"""
 
     def __init__(self, target_subreddits: Optional[List[str]] = None):
         self.subreddits = target_subreddits or [
@@ -53,7 +52,7 @@ class RedditScraper:
         self._load_tickers()
 
     def _load_tickers(self) -> None:
-        """Loads a local JSON file of 3000+ US ticker symbols for regex matching."""
+        """loads a local json file of 3000+ us ticker symbols for regex matching lol"""
         db_path = Path("backend/data/tickers.json")
         if db_path.exists():
             try:
@@ -70,7 +69,7 @@ class RedditScraper:
             }
 
     def _extract_tickers(self, text: str) -> List[str]:
-        """Find strictly uppercase words (1-5 letters) matching known tickers."""
+        """find strictly uppercase words (1-5 letters) matching known tickers lol"""
         found = []
         for match in TICKER_RE.finditer(text):
             ticker = match.group(1)
@@ -79,7 +78,7 @@ class RedditScraper:
         return list(set(found))
 
     async def _random_delay(self) -> None:
-        """Between page navigations: await asyncio.sleep(random.normalvariate(5, 1.5)) clamped to [3, 8] seconds."""
+        """between page navigations: await asynciosleep(randomnormalvariate(5, 15)) clamped to [3, 8] seconds lol"""
         delay = max(3.0, min(8.0, random.normalvariate(5.0, 1.5)))
         await asyncio.sleep(delay)
 
@@ -95,6 +94,7 @@ class RedditScraper:
         logger.info("Starting Playwright Reddit scraper on %d subreddits", len(self.subreddits))
         all_posts: List[RedditPost] = []
         
+                
         # Override known tickers entirely if specifically searching for a dynamic subset
         if ticker_list:
             self.known_tickers.update(ticker_list)
@@ -109,6 +109,7 @@ class RedditScraper:
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
                 
+                                
                 # Setup realistic anti-bot context
                 context = await browser.new_context(
                     user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -132,6 +133,7 @@ class RedditScraper:
                             await page.evaluate("window.scrollBy(0, window.innerHeight * 3)")
                             await page.wait_for_timeout(2000)
                         
+                                                
                         # Extract top post titles, upvotes, times, URLs using fallback evaluation
                         page_posts = await page.evaluate('''() => {
                             let results = [];
@@ -163,6 +165,7 @@ class RedditScraper:
                             return results.slice(0, 30);
                         }''')
                         
+                                                
                         # Filter for relevance to our universe
                         if page_posts:
                             page_posts.sort(key=lambda x: x["upvotes"], reverse=True)
@@ -178,6 +181,7 @@ class RedditScraper:
                                 if ticker_list:
                                     tickers_in_title = [t for t in tickers_in_title if t in ticker_list]
 
+                                
                                 # Filter logic (top quintile or contains relevant ticker)
                                 if upvotes >= quintile_threshold or (len(tickers_in_title) > 0):
                                     post_obj = RedditPost(
@@ -188,6 +192,7 @@ class RedditScraper:
                                         tickers_mentioned=tickers_in_title
                                     )
                                     
+                                                                        
                                     # Optional: Comment scraping can be added here as in Section 7
                                     all_posts.append(post_obj)
 

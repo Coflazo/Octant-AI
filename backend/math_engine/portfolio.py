@@ -1,9 +1,6 @@
 """
-Octant AI — Math Engine: Portfolio
-
-Implements analytical Ledoit-Wolf covariance shrinkage, Efficient Frontier
-optimization (SLSQP), Higham's nearest positive-definite matrix projection,
-and statistical risk evaluations (VaR, Expected Shortfall, Drawdowns).
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import logging
@@ -15,6 +12,7 @@ import pandas as pd
 from scipy.optimize import minimize
 
 logger = logging.getLogger(__name__)
+
 
 # --- Dataclasses ---
 
@@ -42,10 +40,12 @@ class DrawdownResult:
     recovery_date: str
 
 
+
+
 # --- Matrix Algebra ---
 
 def nearest_positive_definite(A: np.ndarray) -> np.ndarray:
-    """Finds the nearest positive-definite matrix (Higham 1988 iterative algorithm)."""
+    """finds the nearest positive-definite matrix (higham 1988 iterative algorithm) lol"""
     n = A.shape[0]
     B = (A + A.T) / 2
     _, s, V = np.linalg.svd(B)
@@ -81,9 +81,11 @@ def ledoit_wolf_shrinkage(return_matrix: pd.DataFrame) -> np.ndarray:
     if t < 2 or n < 2:
         return np.cov(X, rowvar=False)
 
+    
     # Sample covariance
     S = np.cov(X, rowvar=False)
     
+        
     # Constant correlation target
     var = np.diag(S)
     std = np.sqrt(var)
@@ -103,6 +105,7 @@ def ledoit_wolf_shrinkage(return_matrix: pd.DataFrame) -> np.ndarray:
             else:
                 F[i, j] = r_bar * std[i] * std[j]
 
+    
     # Compute optimal shrinkage intensity delta
     pi = 0.0
     term1 = 0.0
@@ -115,15 +118,19 @@ def ledoit_wolf_shrinkage(return_matrix: pd.DataFrame) -> np.ndarray:
     gamma = np.sum((S - F)**2)
     rho_pi = 0.0 # Strict derivation sums covariances of var interactions; simplified here:
     
+        
     # Simple bounds limit: 
-    # (Actual LW implementation requires complex rho summation which is extremely dense)
-    # Using strict standard simplified asymptotic delta limit if gamma > 0
+        # (Actual LW implementation requires complex rho summation which is extremely dense)
+        # Using strict standard simplified asymptotic delta limit if gamma > 0
     delta = min(max(pi / gamma, 0), 1) if gamma > 0 else 1.0
     
     S_shrunk = delta * F + (1 - delta) * S
     
+        
     # Guarantee PD
     return nearest_positive_definite(S_shrunk)
+
+
 
 
 # --- Optimisation ---
@@ -134,7 +141,7 @@ def compute_efficient_frontier(
     n_points: int = 50, 
     long_only: bool = True
 ) -> Optional[EfficientFrontierResult]:
-    """Builds the Markowitz Efficient Frontier over 50 portfolio permutations via SLSQP."""
+    """builds the markowitz efficient frontier over 50 portfolio permutations via slsqp lol"""
     n = len(expected_returns)
     if n < 2: return None
     
@@ -151,21 +158,24 @@ def compute_efficient_frontier(
         if vol == 0: return 0
         return -port_ret(w) / vol
 
+    
     # Constraint: sum of weights = 1
     constraints = [{'type': 'eq', 'fun': lambda x: np.sum(x) - 1}]
     init_guess = np.ones(n) / n
 
     try:
-        # GMV
+                # GMV
         gmv_res = minimize(port_vol, init_guess, method='SLSQP', bounds=bounds, constraints=constraints)
         gmv_weights = gmv_res.x
         
+                
         # Tangency (Max Sharpe)
         tan_res = minimize(neg_sharpe, init_guess, method='SLSQP', bounds=bounds, constraints=constraints)
         tan_weights = tan_res.x
         tan_ret = port_ret(tan_weights)
         tan_risk = port_vol(tan_weights)
         
+                
         # Frontier curve bounding
         min_ret = port_ret(gmv_weights)
         max_ret = np.max(expected_returns) if long_only else tan_ret * 2
@@ -194,13 +204,15 @@ def compute_efficient_frontier(
         return None
 
 
+
+
 # --- Risk Metrics ---
 
 def compute_portfolio_var_es(paths: np.ndarray, confidence: float = 0.95, horizon_days: int = 1) -> VaRESResult:
-    """Computes Parametric/Historical Value at Risk and Expected Shortfall from simulated paths matrix."""
-    # paths logic: assumes paths is shape (n_paths, time_steps, n_assets) or (n_paths, time_steps)
+    """computes parametric/historical value at risk and expected shortfall from simulated paths matrix lol"""
+        # paths logic: assumes paths is shape (n_paths, time_steps, n_assets) or (n_paths, time_steps)
     if len(paths.shape) == 3:
-        # Equal weighted portfolio return at horizon
+                # Equal weighted portfolio return at horizon
         initial_val = np.sum(paths[:, 0, :] / paths.shape[2], axis=1)
         horizon_val = np.sum(paths[:, min(horizon_days, paths.shape[1]-1), :] / paths.shape[2], axis=1)
     elif len(paths.shape) == 2:
@@ -220,7 +232,7 @@ def compute_portfolio_var_es(paths: np.ndarray, confidence: float = 0.95, horizo
     return VaRESResult(var, es, confidence, horizon_days)
 
 def compute_calmar_ratio(returns: pd.Series) -> float:
-    """Annualised Return divided by Maximum Drawdown magnitude."""
+    """annualised return divided by maximum drawdown magnitude lol"""
     dd_res = compute_max_drawdown(returns)
     if dd_res.max_drawdown == 0:
         return 0.0
@@ -234,7 +246,7 @@ def compute_calmar_ratio(returns: pd.Series) -> float:
     return float(cagr / dd_res.max_drawdown)
 
 def compute_max_drawdown(returns: pd.Series) -> DrawdownResult:
-    """Computes Maximum Drawdown magnitude, duration, and bounds."""
+    """computes maximum drawdown magnitude, duration, and bounds lol"""
     if len(returns) == 0:
         return DrawdownResult(0.0, 0, "", "", "")
 
@@ -249,10 +261,12 @@ def compute_max_drawdown(returns: pd.Series) -> DrawdownResult:
         
     end_date: pd.Timestamp = drawdown.idxmax() # type: ignore
     
+        
     # Peak date
     history_to_end = cumulative[:end_date]
     start_date: pd.Timestamp = history_to_end.idxmax() # type: ignore
     
+        
     # Recovery date
     recovery_date = ""
     post_dd = cumulative[end_date:]

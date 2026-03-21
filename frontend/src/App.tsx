@@ -10,6 +10,7 @@ export default function App() {
     const [sessionId] = useState(() => uuidv4());
     const { status: wsStatus, events, sendMessage } = usePulseWebSocket(sessionId);
     
+        
     // Global State
     const [pipelineStatus, setPipelineStatus] = useState<string>("idle");
     const [thesis, setThesis] = useState("");
@@ -26,6 +27,7 @@ export default function App() {
     const [agentStatuses, setAgentStatuses] = useState<any>({});
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
+    
     // Event Router
     useEffect(() => {
         if (events.length === 0) return;

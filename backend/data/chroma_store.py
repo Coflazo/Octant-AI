@@ -1,8 +1,6 @@
 """
-Octant AI — Data Layer: ChromaDB Embedding Store
-
-Provides the ChromaStore class for embedding paper abstracts with Gemini
-and storing them in a local ChromaDB instance to facilitate prior-art detection.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import logging
@@ -15,10 +13,10 @@ logger = logging.getLogger(__name__)
 
 
 class ChromaStore:
-    """Manages the persistent ChromaDB collection for academic papers."""
+    """manages the persistent chromadb collection for academic papers lol"""
 
     def __init__(self) -> None:
-        """Create or open the persistent valid ChromaDB collection."""
+        """create or open the persistent valid chromadb collection lol"""
         settings = get_settings()
         
         try:

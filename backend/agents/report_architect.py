@@ -1,10 +1,6 @@
 """
-Octant AI — Agent 5: Report Architect
-
-The capstone reporting agent. Ingests all metrics, literature extracts,
-and signal evaluations to stream a 7-section narrative via Gemini 2.5 Pro.
-Iteratively calls Matplotlib for graphic mapping, formats LaTeX, 
-and compiles a local PDF output via background OS processes.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import asyncio
@@ -29,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class ReportArchitect:
-    """Agent 5: Streams NLP narratives and orchestrates LaTeX compilation."""
+    """agent 5: streams nlp narratives and orchestrates latex compilation lol"""
 
     def __init__(self, gemini_client):
         self.gemini = gemini_client
@@ -47,18 +43,19 @@ class ReportArchitect:
         results_manifest: Dict[str, PerformanceReport],
         pulse: PulseEmitter
     ) -> str:
-        """Fully orchestrates the final rigorous academic report."""
+        """fully orchestrates the final rigorous academic report lol"""
         job_id = uuid.uuid4().hex[:8]
         
         await pulse.emit_status("report", "active", 0, 7, "Synthesising Narratives", "Agent 5 calling Gemini Pro...", 0, 180)
 
+        
         # 1. Generate Figures
         figure_paths = {}
         for h in hypotheses:
             report = results_manifest.get(h.hypothesis)
             if report and report.raw_results_dict:
-                # Mock extracting strategy return proxies from performance
-                # Real implementation passes series matrices here. We pass empty for pure string compile test.
+                                # Mock extracting strategy return proxies from performance
+                                # Real implementation passes series matrices here. We pass empty for pure string compile test.
                 import pandas as pd
                 dummy_returns = pd.Series(np.random.normal(0, 0.01, 1000))
                 dummy_drawdown = dummy_returns.cumsum() - dummy_returns.cumsum().cummax()
@@ -77,12 +74,14 @@ class ReportArchitect:
                 if path:
                     figure_paths[h.hypothesis] = path
         
+                
         # 2. Extract BibTeX
         all_papers = []
         for p_list in citations_db.values():
             all_papers.extend(p_list)
         bibtex_content = build_bibtex_entries(all_papers)
 
+        
         # 3. Stream Narrative Sections (7 discrete calls to Gemini)
         sections = [
             ("Abstract", "High-level summary of the entire thesis, models used, and core predictive finding."),
@@ -97,6 +96,7 @@ class ReportArchitect:
         gemini_narratives = {}
         model = self.gemini.GenerativeModel("gemini-1.5-pro")
 
+        
         # Context build
         context = f"Thesis: {hypotheses[0].thesis_statement if hypotheses else 'Unknown'}\n\n"
         for h in hypotheses:
@@ -114,19 +114,22 @@ class ReportArchitect:
             
             await pulse.emit_status("report", "active", idx+1, len(sections), f"Writing {sec_id}", "Awaiting tokens...", int((idx/len(sections))*100), (len(sections)-idx)*20)
             
+                        
             # Using thread executor for sync streaming wrapper to avoid blocking async loop
             try:
-                # Real streaming would iterate chunks:
+                                # Real streaming would iterate chunks:
                 response = model.generate_content(prompt, stream=False)
                 text = response.text
                 gemini_narratives[sec_id] = text
                 
+                                
                 # Emit to UI
                 await pulse.emit_report_section({"section": sec_id, "content": text})
             except Exception as e:
                 logger.error("Gemini narrative failed for %s: %s", sec_id, e)
                 gemini_narratives[sec_id] = f"{sec_id} generation failed due to API threshold."
 
+        
         # 4. Assemble LaTeX
         await pulse.emit_status("report", "active", 7, 7, "Compiling PDF", "Executing pdflatex on local OS", 95, 10)
         
@@ -139,6 +142,7 @@ class ReportArchitect:
             bibtex_content=bibtex_content
         )
         
+                
         # 5. Execute pdflatex shell command
         job_name = f"octant_report_{job_id}"
         pdf_path = ""

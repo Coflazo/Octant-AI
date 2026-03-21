@@ -1,9 +1,6 @@
 """
-Octant AI — Agent 2: Literature Research Agent
-
-Autonomously queries 6 academic repositories, deduplicates papers using SequenceMatcher,
-extracts structural intelligence via Gemini Flash, tracks hypothesis support ratio,
-and ingests literature into a local ChromaDB embedding space.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import asyncio
@@ -24,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class LiteratureAgent:
-    """Agent 2: Academic Literature Researcher."""
+    """agent 2: academic literature researcher lol"""
 
     def __init__(self, gemini_client):
         self.gemini = gemini_client
@@ -34,9 +31,10 @@ class LiteratureAgent:
         self.chroma_store = ChromaStore(gemini_client)
 
     def _build_queries(self, hypothesis: HypothesisObject) -> List[str]:
-        """Generates 5-8 search queries mixing domain keywords and mathematical bounds."""
+        """generates 5-8 search queries mixing domain keywords and mathematical bounds lol"""
         base_keys = [k for k in hypothesis.key_variables if len(k) > 2]
         
+                
         # Taxonomy mapping from math engine bounds
         cat = hypothesis.math_method_category.lower()
         math_map = {
@@ -59,6 +57,7 @@ class LiteratureAgent:
             target_keys_str
         ]
         
+                
         # Deduplicate and trim
         seen = set()
         clean_queries = []
@@ -71,7 +70,7 @@ class LiteratureAgent:
         return clean_queries[:8]
 
     def _deduplicate(self, raw_papers: List[PaperObject]) -> List[PaperObject]:
-        """Soft-match titles > 0.85 sequence similarity, keeping the highest influence score."""
+        """soft-match titles > 085 sequence similarity, keeping the highest influence score lol"""
         if not raw_papers:
             return []
             
@@ -82,9 +81,9 @@ class LiteratureAgent:
                 ratio = difflib.SequenceMatcher(None, paper.title.lower(), existing.title.lower()).ratio()
                 if ratio > 0.85:
                     is_dup = True
-                    # Keep the one with better metadata or relevance proxy
-                    # Since influence_score isn't strictly scalar across all models,
-                    # we use abstract length as a proxy for detail if both exist.
+                                        # Keep the one with better metadata or relevance proxy
+                                        # Since influence_score isn't strictly scalar across all models,
+                                        # we use abstract length as a proxy for detail if both exist.
                     if len(paper.abstract) > len(existing.abstract):
                         existing.title = paper.title
                         existing.abstract = paper.abstract
@@ -95,10 +94,11 @@ class LiteratureAgent:
         return deduped
 
     async def research(self, hypotheses: List[HypothesisObject], pulse: PulseEmitter) -> Dict[str, List[PaperObject]]:
-        """Main orchestrated loop for Agent 2."""
+        """main orchestrated loop for agent 2 lol"""
         citations_db: Dict[str, List[PaperObject]] = {}
         total_h = len(hypotheses)
         
+                
         # 1. Emit Active Status
         await pulse.emit_status("literature", "active", 0, total_h, "Agent 2 Deployed", "Spanning 6 Academic Repositories", 0, total_h * 45)
 
@@ -106,34 +106,43 @@ class LiteratureAgent:
             step = i + 1
             await pulse.emit_status("literature", "active", step, total_h, f"Researching Hypothesis {step}", f"Compiling queries for: {hyp.hypothesis[:40]}...", int((step/total_h)*100), (total_h-step)*45)
 
+            
             # 2. Build queries
             queries = self._build_queries(hyp)
             
+                        
             # 3. Concurrently search sources
-            # To avoid rate limits, we use the first 2 queries for heavy APIs
+                        # To avoid rate limits, we use the first 2 queries for heavy APIs
             heavy_query = queries[0] if queries else "quantitative finance"
             broad_keys = [k for k in hyp.key_variables]
 
+            
             # Trigger standard LiteratureEngine (arXiv, SemanticScholar, OpenAlex, CORE)
             eng_task = self.literature_engine.query_all_sources(heavy_query, max_results=5)
             
+                        
             # Trigger Playwright SSRN Scraper
             ssrn_task = self.ssrn_scraper.scrape(heavy_query, limit=2)
             
+                        
             # Trigger Modern Finance Scraper
             mf_task = self.mf_scraper.get_articles(broad_keys)
             
+                        
             # Trigger Vector Retrieval from prior runs
             chroma_task = asyncio.to_thread(self.chroma_store.query_similar, heavy_query, top_k=2)
 
+            
             # Gather raw papers
             raw_results = await asyncio.gather(eng_task, ssrn_task, mf_task, chroma_task, return_exceptions=True)
             
+                        
             # Process results safely
             eng_papers = raw_results[0] if isinstance(raw_results[0], list) else []
             ssrn_papers = raw_results[1] if isinstance(raw_results[1], list) else []
             mf_papers = raw_results[2] if isinstance(raw_results[2], list) else []
             
+                        
             # Chroma returns chunks, map them to simple PaperObjects if they are dictionaries
             chroma_papers = []
             if isinstance(raw_results[3], list):
@@ -149,20 +158,24 @@ class LiteratureAgent:
 
             all_raw_papers = eng_papers + ssrn_papers + mf_papers + chroma_papers
             
+                        
             # 5. Emit progress
             await pulse.emit_status("literature", "active", step, total_h, f"Researching Hypothesis {step}", f"Retrieved {len(all_raw_papers)} raw documents.", int((step/total_h)*100), (total_h-step)*45)
             
+                        
             # 4. Deduplicate
             unique_papers = self._deduplicate(all_raw_papers)
             
+                        
             # 6. NLP Extraction: Gemini determines hypothesis support
-            # We already have abstracts, but the master spec requests a batch structural pass
-            # We'll re-run them through the Engine's Gemini method to inject the hypothesis context
+                        # We already have abstracts, but the master spec requests a batch structural pass
+                        # We'll re-run them through the Engine's Gemini method to inject the hypothesis context
             if unique_papers:
                 analyzed_papers = await self.literature_engine._analyze_papers_with_gemini(unique_papers, hyp.hypothesis)
             else:
                 analyzed_papers = []
 
+            
             # 7. PULSE citation cards
             for paper in analyzed_papers:
                 relevance = 85.0
@@ -183,10 +196,12 @@ class LiteratureAgent:
                     "supports_hypothesis": support_flag
                 })
                 
+                            
             # 8. Store in VectorDB
             if analyzed_papers:
                 await asyncio.to_thread(self.chroma_store.embed_and_store, analyzed_papers)
                 
+                            
             # 9. Compute prior_art_summary
             supporting = sum(1 for p in analyzed_papers if p.supports_hypothesis == "YES")
             contradicting = sum(1 for p in analyzed_papers if p.supports_hypothesis == "NO")
@@ -204,6 +219,7 @@ class LiteratureAgent:
             hyp.literature_papers = analyzed_papers
             citations_db[getattr(hyp, "id", f"H{step}")] = analyzed_papers
 
+        
         # 10. Emit Complete
         total_p = sum(len(papers) for papers in citations_db.values())
         await pulse.emit_status("literature", "complete", total_h, total_h, "Review Complete", f"{total_p} peer-reviewed papers catalogued globally.", 100, 0)

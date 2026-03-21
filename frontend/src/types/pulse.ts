@@ -7,6 +7,7 @@
  * pattern matching in the event router.
  */
 
+
 // ── Agent identifiers (one per pipeline stage) ──────────────────────────
 
 export type AgentName =
@@ -16,9 +17,11 @@ export type AgentName =
   | "backtest"
   | "architect";
 
+
 // ── Status lifecycle states ─────────────────────────────────────────────
 
 export type PulseStatus = "pending" | "active" | "complete" | "error";
+
 
 // ── Payload type discriminator ──────────────────────────────────────────
 
@@ -33,6 +36,7 @@ export type PayloadType =
   | "transcription_complete"
   | "error";
 
+
 // ── Progress tracker ────────────────────────────────────────────────────
 
 export interface PulseProgress {
@@ -42,12 +46,14 @@ export interface PulseProgress {
   estimated_remaining_sec: number;
 }
 
+
 // ── Display message ─────────────────────────────────────────────────────
 
 export interface PulseMessage {
   title: string;
   subtitle: string;
 }
+
 
 // ── Hypothesis Card Payload ─────────────────────────────────────────────
 
@@ -72,6 +78,7 @@ export interface HypothesisCard {
   asset_class: string;
 }
 
+
 // ── Citation Card Payload ───────────────────────────────────────────────
 
 export interface CitationCard {
@@ -94,6 +101,7 @@ export interface CitationCard {
   novelty_score: number;
 }
 
+
 // ── Ticker Card Payload ─────────────────────────────────────────────────
 
 export interface TickerCard {
@@ -110,28 +118,33 @@ export interface TickerCard {
   sentiment_z_score: number | null;
 }
 
+
 // ── Metric Result Payload ───────────────────────────────────────────────
 
 export interface MetricResult {
   hypothesis_id: string;
 
+  
   // Return metrics
   total_return: number;
   cagr: number;
   annualised_excess_return: number;
 
+  
   // Risk metrics
   annualised_vol: number;
   max_drawdown: number;
   max_drawdown_duration_days: number;
   calmar_ratio: number;
 
+  
   // Risk-adjusted
   sharpe_ratio: number;
   sortino_ratio: number;
   information_ratio: number;
   omega_ratio: number;
 
+  
   // Statistical
   t_statistic: number;
   bootstrap_p_value: number;
@@ -141,19 +154,23 @@ export interface MetricResult {
   bh_pass: boolean;
   bayes_adjusted_sharpe: number;
 
+  
   // Transaction cost sensitivity
   breakeven_cost_bps: number;
   return_at_2bps: number;
   return_at_10bps: number;
 
+  
   // Volatility
   garch_persistence: number;
   vol_regime_fraction_high: number;
 
+  
   // Sentiment
   sentiment_factor_loading: number | null;
   sentiment_factor_t_stat: number | null;
 }
+
 
 // ── Report Section Payload ──────────────────────────────────────────────
 
@@ -163,12 +180,14 @@ export interface ReportSection {
   is_complete: boolean;
 }
 
+
 // ── Transcription Payload ───────────────────────────────────────────────
 
 export interface TranscriptionPayload {
   text: string;
   is_final: boolean;
 }
+
 
 // ── Error Payload ───────────────────────────────────────────────────────
 
@@ -178,6 +197,7 @@ export interface ErrorPayload {
   traceback: string;
   recovery_action: string | null;
 }
+
 
 // ── Union of all payload shapes ─────────────────────────────────────────
 
@@ -191,6 +211,7 @@ export type PulsePayload =
   | ErrorPayload
   | Record<string, unknown>; // fallback for "status" events with freeform data
 
+
 // ── Top-level PULSE event envelope ──────────────────────────────────────
 
 export interface PulseEvent {
@@ -203,6 +224,7 @@ export interface PulseEvent {
   message: PulseMessage;
   timestamp: string;
 }
+
 
 // ── Exchange supported by Universe Builder ──────────────────────────────
 
@@ -238,6 +260,7 @@ export const EXCHANGES: ExchangeInfo[] = [
   { code: "HONG_KONG",   label: "Hong Kong",        suffix: ".HK",flag: "🇭🇰" },
 ];
 
+
 // ── Pipeline request shape (mirrors backend PipelineRequest) ────────────
 
 export interface PipelineRequest {
@@ -251,6 +274,7 @@ export interface PipelineRequest {
   session_id: string;
 }
 
+
 // ── Pipeline status (mirrors backend SessionState) ──────────────────────
 
 export type PipelineStatus =
@@ -260,12 +284,14 @@ export type PipelineStatus =
   | "stopped"
   | "error";
 
+
 // ── Significance labels ─────────────────────────────────────────────────
 
 export type SignificanceLabel =
   | "strongly significant"
   | "significant"
   | "not significant";
+
 
 // ── Top-level application state ─────────────────────────────────────────
 

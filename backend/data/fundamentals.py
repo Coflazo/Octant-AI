@@ -1,8 +1,6 @@
 """
-Octant AI — Data Fetcher: Fundamentals
-
-Provides the FundamentalsEngine class for retrieving equity characteristics
-and macro indicators using the OpenBB SDK.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import asyncio
@@ -15,18 +13,18 @@ logger = logging.getLogger(__name__)
 
 
 class FundamentalsEngine:
-    """Retrieves fundamental equity metrics and macro indicators using OpenBB SDK."""
+    """retrieves fundamental equity metrics and macro indicators using openbb sdk lol"""
 
     def __init__(self) -> None:
-        """Initialise OpenBB environment variables if defined."""
+        """initialise openbb environment variables if defined lol"""
         settings = get_settings()
         if settings.OPENBB_PAT:
             import os
             os.environ["OPENBB_PAT"] = settings.OPENBB_PAT
 
     async def get_short_interest(self, tickers: List[str]) -> Dict[str, float]:
-        """Fetch short interest as % of float for given tickers."""
-        # Using a mock sleep for OpenBB integration as real SI data is often premium-only
+        """fetch short interest as % of float for given tickers lol"""
+                # Using a mock sleep for OpenBB integration as real SI data is often premium-only
         await asyncio.sleep(0.1)
         return {ticker: 2.5 for ticker in tickers}
 
@@ -51,7 +49,7 @@ class FundamentalsEngine:
         return await asyncio.to_thread(_fetch_sync)
 
     async def get_market_caps(self, tickers: List[str]) -> Dict[str, float]:
-        """Fetch market capitalisation values."""
+        """fetch market capitalisation values lol"""
         def _fetch_sync():
             try:
                 import yfinance as yf
@@ -65,7 +63,7 @@ class FundamentalsEngine:
         return await asyncio.to_thread(_fetch_sync)
 
     async def get_earnings_dates(self, tickers: List[str]) -> Dict[str, list]:
-        """Fetch upcoming earnings dates."""
+        """fetch upcoming earnings dates lol"""
         await asyncio.sleep(0.1)
         return {ticker: [] for ticker in tickers}
 
@@ -78,10 +76,10 @@ class FundamentalsEngine:
         logger.info("Fetching macro indicators from FRED")
         
         def _fetch_sync():
-            # In a production environment with OpenBB v4 fully configured:
-            # from openbb import obb
-            # ff_rate = obb.economy.fred_series("FEDFUNDS").results[-1].value
-            # We mock the return to ensure pipeline continuity if OpenBB is rate-limited
+                        # In a production environment with OpenBB v4 fully configured:
+                        # from openbb import obb
+                        # ff_rate = obb.economy.fred_series("FEDFUNDS").results[-1].value
+                        # We mock the return to ensure pipeline continuity if OpenBB is rate-limited
             return {
                 "federal_funds_rate": 5.25,
                 "yield_spread_10y_2y": -0.45,

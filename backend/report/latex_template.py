@@ -1,8 +1,6 @@
 """
-Octant AI — Report Architect: LaTeX Template Assembler
-
-Generates a perfectly escaped, publication-grade IMRaD LaTeX source string,
-including complex `booktabs` statistical tables and referenced dynamic figures.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import logging
@@ -16,18 +14,18 @@ logger = logging.getLogger(__name__)
 
 
 class LaTeXAssembler:
-    """Compounds text, tables, and images into a strict .tex source string."""
+    """compounds text, tables, and images into a strict tex source string lol"""
 
     def __init__(self):
         self.header_color = "1B3D6E" # OctNavy
         self.accent_color = "00C07A" # OctGreen
 
     def _latex_escape(self, s: str) -> str:
-        """Sanitizes text strings for safe LaTeX compilation."""
+        """sanitizes text strings for safe latex compilation lol"""
         if s is None:
             return ""
         s = str(s)
-        # Escape order matters
+                # Escape order matters
         s = s.replace("\\", "\\textbackslash ")
         subs = {
             "&": "\\&", "%": "\\%", "$": "\\$", "#": "\\#",
@@ -47,8 +45,9 @@ class LaTeXAssembler:
         gemini_narratives: Dict[str, str],
         bibtex_content: str
     ) -> str:
-        """Injects python variables into the rigid IMRaD LaTeX preamble and body."""
+        """injects python variables into the rigid imrad latex preamble and body lol"""
 
+        
         # 1. Start Preamble
         latex = [
             "\\documentclass[12pt,a4paper]{article}",
@@ -77,6 +76,7 @@ class LaTeXAssembler:
             "\\setstretch{1.15}"
         ]
 
+        
         # 2. Title Page
         thesis_statement = hypotheses[0].thesis_statement if hypotheses else "Quantitative Trading Strategy Analysis"
         latex.extend([
@@ -100,6 +100,7 @@ class LaTeXAssembler:
             "\\newpage"
         ])
 
+        
         # 3. IMRaD Sections
         sections = [
             ("Introduction", "1_Introduction"),
@@ -116,11 +117,13 @@ class LaTeXAssembler:
                 self._latex_escape(gemini_narratives.get(key, f"{title} narrative not available."))]
             )
             
+                        
             # Inject figures conditionally
             if title == "Results":
-                # Inject performance table
+                                # Inject performance table
                 latex.extend(self._build_performance_table(results_manifest, hypotheses))
                 
+                                
                 # Check for equity curve figure mapping to primary hypothesis
                 primary_h = hypotheses[0].hypothesis if hypotheses else ""
                 if primary_h in figure_paths:
@@ -132,12 +135,14 @@ class LaTeXAssembler:
                         "\\end{figure}"
                     ])
 
+        
         # 4. Bibliography
         latex.extend([
             "\\newpage",
             "\\printbibliography[heading=bibintoc, title={References}]"
         ])
 
+        
         # 5. Appendices
         latex.extend(self._build_appendices(hypotheses, results_manifest))
 
@@ -145,7 +150,7 @@ class LaTeXAssembler:
         return "\n".join(latex)
 
     def _build_performance_table(self, results_manifest: Dict[str, PerformanceReport], hypotheses: List[HypothesisObject]) -> List[str]:
-        """Creates a booktabs formatted LaTeX table with key stats."""
+        """creates a booktabs formatted latex table with key stats lol"""
         latex = [
             "\\begin{table}[h!]",
             "\\centering",
@@ -183,7 +188,7 @@ class LaTeXAssembler:
         return latex
 
     def _build_appendices(self, hypotheses: List[HypothesisObject], results_manifest: Dict[str, PerformanceReport]) -> List[str]:
-        """Adds statistical appendices including FF5 factors and Marchenko-Pastur."""
+        """adds statistical appendices including ff5 factors and marchenko-pastur lol"""
         return [
             "\\newpage",
             "\\appendix",

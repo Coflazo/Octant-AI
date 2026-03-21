@@ -1,1 +1,1 @@
-"""Octant AI — Data layer: price feeds, fundamentals, academic sources, scrapers."""
+"""octant ai — data layer: price feeds, fundamentals, academic sources, scrapers lol"""

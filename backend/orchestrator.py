@@ -1,10 +1,6 @@
 """
-Octant AI — Backend Orchestrator
-
-The topmost coordinator class that translates frontend inputs or
-Dust.tt API triggers into physical Agent invocations. Implements strict
-`asyncio.gather` boundaries to enforce concurrent Literature and Universe queries,
-while respecting atomic pipeline cancellation flags.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import asyncio
@@ -31,7 +27,7 @@ gemini_client = genai
 
 
 class PipelineStoppedError(Exception):
-    """Raised natively when a frontend cancellation kills the session pipeline."""
+    """raised natively when a frontend cancellation kills the session pipeline lol"""
     pass
 
 
@@ -54,10 +50,10 @@ class PipelineResult:
 
 
 class OctantOrchestrator:
-    """Master Pipeline Coordinator enforcing the 5-Agent Directed Acyclic Graph."""
+    """master pipeline coordinator enforcing the 5-agent directed acyclic graph lol"""
 
     def __init__(self):
-        # Initialise agents passing down the global injected Gemini resource
+                # Initialise agents passing down the global injected Gemini resource
         self.hypothesis_engine = HypothesisEngine(gemini_client)
         self.literature_agent = LiteratureAgent(gemini_client)
         self.universe_builder = UniverseBuilder()
@@ -65,30 +61,33 @@ class OctantOrchestrator:
         self.report_architect = ReportArchitect(gemini_client)
 
     async def _check_stop(self, session_id: str):
-        """Raises a hard kill signal if the frontend interrupted the process."""
+        """raises a hard kill signal if the frontend interrupted the process lol"""
         state = await session_manager.get(session_id)
         if state and state.stop_flag.is_set():
             logger.warning("Pipeline halt intercepted for session %s.", session_id)
             raise PipelineStoppedError("Orchestration interrupted by user.")
 
     async def run_pipeline(self, request: PipelineRequest, pulse: PulseEmitter) -> PipelineResult:
-        """The core quantitative pipeline routing logic."""
+        """the core quantitative pipeline routing logic lol"""
         session_id = request.session_id
         
         try:
-            # 1. Start Phase
+                        # 1. Start Phase
             await self._check_stop(session_id)
             await pulse.emit_status("orchestrator", "active", 1, 5, "Initializing", "Kicking off 5-node pipeline...")
 
+            
             # 2. Agent 1 -> Hypothesis Engine
             await self._check_stop(session_id)
             hypotheses = await self.hypothesis_engine.generate(request.thesis, pulse)
             await session_manager.update(session_id, hypotheses=hypotheses)
 
+            
             # 3. Agents 2 & 3 -> Concurrent Literature and Universe Builder
             await self._check_stop(session_id)
             await pulse.emit_status("orchestrator", "active", 2, 5, "Concurrent Research", "Spinning up Agent 2 (Literature) & Agent 3 (Universe)")
             
+                        
             # Using asyncio.gather for parallel fork-join semantics per spec
             literature_task = asyncio.create_task(
                 self.literature_agent.research(hypotheses, pulse)
@@ -99,16 +98,19 @@ class OctantOrchestrator:
             
             citations_db, universe_result = await asyncio.gather(literature_task, universe_task)
             
+                        
             # 4. Agent 4 -> Backtesting Engine
             await self._check_stop(session_id)
             results_manifest = await self.backtesting_agent.run(universe_result, hypotheses, citations_db, pulse)
             await session_manager.update(session_id, results_manifest=results_manifest)
 
+            
             # 5. Agent 5 -> Report Architect
             await self._check_stop(session_id)
             pdf_path = await self.report_architect.generate(hypotheses, citations_db, results_manifest, pulse)
             await session_manager.update(session_id, pdf_path=pdf_path, status="complete")
             
+                        
             # Final Success pulse
             await pulse.emit_status("orchestrator", "complete", 5, 5, "Success", "Pipeline finished execution.")
 

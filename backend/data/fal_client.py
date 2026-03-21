@@ -1,8 +1,6 @@
 """
-Octant AI — Data Layer: fal.ai Sparklines
-
-Async wrapper for the fal.ai image generation API. Used by Agent 3
-to generate clean, dark-theme sparkline charts for ticker cards.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import asyncio
@@ -16,10 +14,10 @@ logger = logging.getLogger(__name__)
 
 
 class FalChartClient:
-    """Interfaces with fal.ai to generate high-fidelity sparkline images."""
+    """interfaces with falai to generate high-fidelity sparkline images lol"""
 
     def __init__(self) -> None:
-        """Initialise Fal AI credentials."""
+        """initialise fal ai credentials lol"""
         settings = get_settings()
         self.api_key = settings.FAL_KEY
         if self.api_key:
@@ -58,6 +56,7 @@ class FalChartClient:
         try:
             import fal_client
 
+            
             # fal_client.subscribe is synchronous by default.
             result = await asyncio.to_thread(
                 fal_client.subscribe,
@@ -83,5 +82,5 @@ class FalChartClient:
 
         except Exception as exc:
             logger.error("Failed to generate sparkline for %s via fal.ai: %s", symbol, exc)
-            # Sparkline is non-critical, return empty string per spec
+                        # Sparkline is non-critical, return empty string per spec
             return ""

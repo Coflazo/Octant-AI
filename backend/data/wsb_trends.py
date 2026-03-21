@@ -1,9 +1,6 @@
 """
-Octant AI — Sentiment Data: WSBTrends Subprocess
-
-Wrapper for the WSBTrends Go binary. Executes the compiled tool
-to fetch raw ticker mention counts in high performance, handling
-process outputs and graceful degradation.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import asyncio
@@ -17,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class WSBTrendsClient:
-    """Interfaces with the external WSBTrends Go binary."""
+    """interfaces with the external wsbtrends go binary lol"""
 
     def __init__(self) -> None:
         settings = get_settings()
@@ -57,7 +54,7 @@ class WSBTrendsClient:
                 return {}
 
             data = json.loads(output_str)
-            # Ensure it fits dict[str, int]
+                        # Ensure it fits dict[str, int]
             return {str(k): int(v) for k, v in data.items()}
 
         except Exception as exc:

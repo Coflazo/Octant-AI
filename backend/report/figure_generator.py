@@ -1,8 +1,6 @@
 """
-Octant AI — Report Architect: Figure Generator
-
-Constructs publication-ready 300 DPI Matplotlib/Seaborn visualisations 
-styled natively for the Octant PDF report (Dark Navy lines, Anthropic-Sans proxy).
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import logging
@@ -27,12 +25,13 @@ logger = logging.getLogger(__name__)
 
 
 class FigureGenerator:
-    """Generates styled PNG visualisations for LaTeX document injection."""
+    """generates styled png visualisations for latex document injection lol"""
 
     def __init__(self, output_dir: str = "/tmp/octant_reports/figures"):
         self.output_dir = output_dir
         os.makedirs(self.output_dir, exist_ok=True)
         
+                
         # Base styling setup
         self.OCT_NAVY = "#1B3D6E"
         self.OCT_GRAY = "#F0F0F0"
@@ -52,7 +51,7 @@ class FigureGenerator:
         })
 
     def _get_path(self, basename: str) -> str:
-        """Returns physical file path with unique identifier."""
+        """returns physical file path with unique identifier lol"""
         return os.path.join(self.output_dir, f"{basename}_{uuid.uuid4().hex[:6]}.png")
 
     def equity_curve_figure(
@@ -63,7 +62,7 @@ class FigureGenerator:
         hypothesis_id: str, 
         stats_dict: dict
     ) -> str:
-        """Cumulative log-return plot with shaded drawdowns and text annotation box."""
+        """cumulative log-return plot with shaded drawdowns and text annotation box lol"""
         fig, ax = plt.subplots(figsize=(10, 6))
         
         if strategy_returns.empty:
@@ -76,9 +75,10 @@ class FigureGenerator:
         ax.plot(strat_cum.index, strat_cum.values, color=self.OCT_NAVY, linewidth=2, label="Strategy")
         ax.plot(bench_cum.index, bench_cum.values, color="gray", linestyle="--", alpha=0.7, label="Benchmark")
         
+                
         # Shade drawdowns (assume drawdown_series is negative fractional drawdown)
         if not drawdown_series.empty:
-            # We shade where DD < -0.01 (1%) to avoid noise
+                        # We shade where DD < -0.01 (1%) to avoid noise
             significant_dd = drawdown_series < -0.01
             if significant_dd.any():
                 ax.fill_between(
@@ -95,6 +95,7 @@ class FigureGenerator:
         ax.set_ylabel("Growth of $1")
         ax.legend(loc="upper right")
         
+                
         # Statistics Box
         stats_text = (
             f"Sharpe: {stats_dict.get('sharpe', 0.0):.2f}\n"
@@ -112,7 +113,7 @@ class FigureGenerator:
         return path
 
     def vol_surface_figure(self, vol_surface) -> str:
-        """matplotlib 3D surface mesh + flat heatmap as side-by-side subplots"""
+        """matplotlib 3d surface mesh + flat heatmap as side-by-side subplots lol"""
         from mpl_toolkits.mplot3d import Axes3D
         
         if vol_surface is None or vol_surface.implied_vols.empty:
@@ -120,6 +121,7 @@ class FigureGenerator:
             
         fig = plt.figure(figsize=(14, 6))
         
+                
         # Subset just calls for the surface representation
         df = vol_surface.implied_vols
         calls = df[df["type"] == "call"]
@@ -127,6 +129,7 @@ class FigureGenerator:
             plt.close(fig)
             return ""
             
+                    
         # Group to create grid
         grid = calls.groupby(["T", "K"])["implied_vol"].mean().unstack()
         T = grid.index.values
@@ -134,6 +137,7 @@ class FigureGenerator:
         T_mesh, K_mesh = np.meshgrid(T, K)
         IV_mesh = grid.values.T
         
+                
         # 3D Surface
         ax1 = fig.add_subplot(121, projection='3d')
         surf = ax1.plot_surface(K_mesh, T_mesh, IV_mesh, cmap="viridis", edgecolor='none', alpha=0.8)
@@ -143,6 +147,7 @@ class FigureGenerator:
         ax1.set_title("3D Volatility Surface")
         fig.colorbar(surf, ax=ax1, shrink=0.5, aspect=10)
         
+                
         # 2D Heatmap
         ax2 = fig.add_subplot(122)
         sns.heatmap(grid, cmap="viridis", ax=ax2, cbar=True)
@@ -157,7 +162,7 @@ class FigureGenerator:
         return path
 
     def return_distribution_figure(self, returns: pd.Series, hypothesis_id: str) -> str:
-        """Histogram + fitted Normal overlay + Q-Q plot side-by-side."""
+        """histogram + fitted normal overlay + q-q plot side-by-side lol"""
         from scipy import stats
         
         df = returns.dropna()
@@ -166,6 +171,7 @@ class FigureGenerator:
             
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
         
+                
         # Distribution
         sns.histplot(df, bins=50, stat="density", ax=ax1, color=self.OCT_NAVY, alpha=0.6)
         mu, std = df.mean(), df.std()
@@ -175,6 +181,7 @@ class FigureGenerator:
         ax1.set_title(f"Return Distribution - {hypothesis_id}")
         ax1.legend()
         
+                
         # Kurtosis / Skewness box
         skew = df.skew()
         kurt = df.kurtosis()
@@ -182,6 +189,7 @@ class FigureGenerator:
         props = dict(boxstyle='round', facecolor='white', alpha=0.7)
         ax1.text(0.05, 0.95, stats_txt, transform=ax1.transAxes, verticalalignment='top', bbox=props)
         
+                
         # Q-Q plot
         stats.probplot(df, dist="norm", plot=ax2)
         ax2.get_lines()[0].set_marker('o')
@@ -197,13 +205,14 @@ class FigureGenerator:
         return path
 
     def correlation_clustermap_figure(self, return_matrix: pd.DataFrame) -> str:
-        """Seaborn clustermap with diverging blue-white-red colormap."""
+        """seaborn clustermap with diverging blue-white-red colormap lol"""
         df = return_matrix.dropna()
         if df.shape[1] < 2:
             return ""
             
         corr = df.corr()
         
+                
         # Requires seaborn clustermap (creates its own figure)
         g = sns.clustermap(
             corr, 
@@ -223,7 +232,7 @@ class FigureGenerator:
         return path
 
     def rolling_sharpe_figure(self, rolling_alpha_result, hypothesis_id: str) -> str:
-        """Rolling alpha with +/- 1 stdev CI band, dashed zero line."""
+        """rolling alpha with +/- 1 stdev ci band, dashed zero line lol"""
         if rolling_alpha_result is None or rolling_alpha_result.alpha_series.empty:
             return ""
             
@@ -232,10 +241,12 @@ class FigureGenerator:
         
         fig, ax = plt.subplots(figsize=(10, 5))
         
+                
         # Plot Alpha
         ax.plot(alpha.index, alpha.values, color=self.OCT_NAVY, label="12m Rolling Alpha")
         ax.axhline(0, color="gray", linestyle="--", linewidth=1.5)
         
+                
         # Fill standard deviation (approximate empirical bounds over window)
         std = alpha.rolling(60).std()
         upper = alpha + std
@@ -246,6 +257,7 @@ class FigureGenerator:
         ax.legend(loc="upper left")
         ax.set_ylabel("Daily Alpha (Intercept)")
         
+                
         # Secondary axis for rolling Sharpe
         ax2 = ax.twinx()
         ax2.plot(sharpe.index, sharpe.values, color=self.ACCENT, linestyle="-.", alpha=0.8, label="Rolling Sharpe")
@@ -259,7 +271,7 @@ class FigureGenerator:
         return path
 
     def eigenvalue_spectrum_figure(self, pca_result) -> str:
-        """Eigenvalue bar chart with Marchenko-Pastur boundary vertical line."""
+        """eigenvalue bar chart with marchenko-pastur boundary vertical line lol"""
         if pca_result is None or len(pca_result.eigenvalues) == 0:
             return ""
             
@@ -285,14 +297,15 @@ class FigureGenerator:
         return path
 
     def sentiment_wavelet_figure(self, wavelet_result) -> str:
-        """Coherence mock figure representing wavelet cross-spectrum analysis."""
+        """coherence mock figure representing wavelet cross-spectrum analysis lol"""
         if wavelet_result is None:
             return ""
             
         fig, ax = plt.subplots(figsize=(8, 4))
         
+                
         # Create a mock stylistic representation of a wavelet power spectrum
-        # since PyWavelet continuous transform output isn't preserved in the basic result dataclass
+                # since PyWavelet continuous transform output isn't preserved in the basic result dataclass
         x = np.linspace(0, 10, 100)
         y = np.linspace(0, 5, 50)
         X, Y = np.meshgrid(x, y)
@@ -311,7 +324,7 @@ class FigureGenerator:
         return path
 
     def factor_loading_heatmap(self, ff5_results: dict, hypotheses: list) -> str:
-        """Hypothesis × Factor heatmap."""
+        """hypothesis × factor heatmap lol"""
         if not ff5_results:
             return ""
             

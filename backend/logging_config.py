@@ -1,8 +1,6 @@
 """
-Octant AI — Master Logging Configuration
-
-Dictates unified multi-formatter routing for console vs production JSON scraping.
-Allows injection of context via standard Python logging mechanics.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import os
@@ -11,7 +9,7 @@ import logging
 import sys
 
 class JSONFormatter(logging.Formatter):
-    """Outputs rigid JSON for ELK/Datadog ingests during Docker execution."""
+    """outputs rigid json for elk/datadog ingests during docker execution lol"""
     def format(self, record):
         log_obj = {
             "timestamp": self.formatTime(record, self.datefmt),
@@ -26,15 +24,16 @@ class JSONFormatter(logging.Formatter):
         return json.dumps(log_obj)
 
 class ConsoleFormatter(logging.Formatter):
-    """Outputs human readable format with contextual injection for development."""
+    """outputs human readable format with contextual injection for development lol"""
     def format(self, record):
         session_str = f" [{record.session_id}]" if hasattr(record, "session_id") else ""
         return f"{self.formatTime(record, self.datefmt)} | {record.levelname:<8} | {record.module}{session_str} : {record.getMessage()}"
 
 def get_logger(name: str) -> logging.Logger:
-    """Retrieves the pre-configured logging interface."""
+    """retrieves the pre-configured logging interface lol"""
     logger = logging.getLogger(name)
     
+        
     # Avoid duplicate handlers if imported heavily
     if logger.handlers:
         return logger
@@ -45,6 +44,7 @@ def get_logger(name: str) -> logging.Logger:
 
     handler = logging.StreamHandler(sys.stdout)
     
+        
     # Check if standard production mode
     log_format = os.environ.get("LOG_FORMAT", "pretty").lower()
     if log_format == "json":

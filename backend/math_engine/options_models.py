@@ -1,9 +1,6 @@
 """
-Octant AI — Math Engine: Options Models
-
-Comprehensive Black-Scholes pricing logic including the full Greeks suite,
-numerical Implied Volatility root-finding (Brent's method), Risk Reversal, 
-and Volatility Surface construction from arbitrary options chains.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import logging
@@ -25,7 +22,7 @@ class VolSurface:
 
 
 def _d1_d2(S: float, K: float, r: float, T: float, sigma: float) -> tuple[float, float]:
-    """Helper to compute probability factors d1 and d2."""
+    """helper to compute probability factors d1 and d2 lol"""
     if T <= 0 or sigma <= 0 or K <= 0 or S <= 0:
         return 0.0, 0.0
     d1 = (np.log(S / K) + (r + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
@@ -33,14 +30,14 @@ def _d1_d2(S: float, K: float, r: float, T: float, sigma: float) -> tuple[float,
     return d1, d2
 
 def black_scholes_call(S: float, K: float, r: float, T: float, sigma: float) -> float:
-    """Prices a European Call option."""
+    """prices a european call option lol"""
     if T <= 0:
         return max(0.0, S - K)
     d1, d2 = _d1_d2(S, K, r, T, sigma)
     return S * norm.cdf(d1) - K * np.exp(-r * T) * norm.cdf(d2)
 
 def black_scholes_put(S: float, K: float, r: float, T: float, sigma: float) -> float:
-    """Prices a European Put option via Put-Call Parity."""
+    """prices a european put option via put-call parity lol"""
     if T <= 0:
         return max(0.0, K - S)
     d1, d2 = _d1_d2(S, K, r, T, sigma)
@@ -83,7 +80,7 @@ def bs_rho(S: float, K: float, r: float, T: float, sigma: float, option_type: st
     return -K * T * np.exp(-r * T) * norm.cdf(-d2)
 
 def implied_vol(market_price: float, S: float, K: float, r: float, T: float, option_type: str) -> float:
-    """Finds the Implied Volatility using Brent's Method."""
+    """finds the implied volatility using brent's method lol"""
     if T <= 0 or market_price <= 0:
         return 0.0
         
@@ -93,7 +90,7 @@ def implied_vol(market_price: float, S: float, K: float, r: float, T: float, opt
         return black_scholes_put(S, K, r, T, sigma) - market_price
 
     try:
-        # Bracket between 10 basis points and 1000%
+                # Bracket between 10 basis points and 1000%
         iv = brentq(objective, 1e-6, 10.0)
         return float(iv)
     except Exception as e:
@@ -152,14 +149,14 @@ def build_vol_surface(options_chain: pd.DataFrame) -> Optional[VolSurface]:
         return None
 
 def compute_risk_reversal_25(vol_surface: VolSurface) -> float:
-    """RR(25) = IV(25Δ Call) - IV(25Δ Put)."""
-    # Mocking delta extraction purely from VolSurface grid.
+    """rr(25) = iv(25δ call) - iv(25δ put) lol"""
+        # Mocking delta extraction purely from VolSurface grid.
     if vol_surface is None or vol_surface.implied_vols.empty:
         return 0.0
         
     df = vol_surface.implied_vols
-    # In a real model we would filter by exact delta=0.25 on the curve. 
-    # Here we simulate the logic by grabbing average call skew vs put skew.
+        # In a real model we would filter by exact delta=0.25 on the curve. 
+        # Here we simulate the logic by grabbing average call skew vs put skew.
     calls = df[df["type"] == "call"]
     puts = df[df["type"] == "put"]
     
@@ -175,7 +172,7 @@ def compute_risk_reversal_25(vol_surface: VolSurface) -> float:
     return float(call_str["implied_vol"].mean() - put_str["implied_vol"].mean())
 
 def compute_vol_term_structure_slope(vol_surface: VolSurface) -> float:
-    """(IV_3m - IV_1m)/IV_1m"""
+    """(iv_3m - iv_1m)/iv_1m lol"""
     if vol_surface is None or len(vol_surface.term_structure) < 2:
         return 0.0
         
@@ -183,6 +180,7 @@ def compute_vol_term_structure_slope(vol_surface: VolSurface) -> float:
     if len(ts) == 0:
         return 0.0
         
+            
     # Extrapolate nearest to 1m (0.08 yr) and 3m (0.25 yr)
     idx_1m = np.argmin(np.abs(ts[:, 0] - 0.08))
     idx_3m = np.argmin(np.abs(ts[:, 0] - 0.25))

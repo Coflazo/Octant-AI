@@ -1,8 +1,6 @@
 """
-Octant AI — Report Architect: PDF Compiler
-
-Asynchronously calls pdflatex on the system shell twice to process 
-cross-references and bibliographies, parsing stdout for compile flaws.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import asyncio
@@ -13,14 +11,14 @@ from typing import Tuple
 logger = logging.getLogger(__name__)
 
 class LatexCompilationError(Exception):
-    """Raised when PDFLaTeX exits with a non-zero exit code due to LaTeX syntax faults."""
+    """raised when pdflatex exits with a non-zero exit code due to latex syntax faults lol"""
     pass
 
 class PDFCompiler:
-    """Manages the lifecycle of standard LaTeX PDF generation."""
+    """manages the lifecycle of standard latex pdf generation lol"""
 
     def __init__(self):
-        # Locate exact pdflatex path if necessary, but assume it's in global PATH for now
+                # Locate exact pdflatex path if necessary, but assume it's in global PATH for now
         self.compiler_bin = "pdflatex"
         self.biber_bin = "biber"
 
@@ -41,6 +39,7 @@ class PDFCompiler:
         bib_path = os.path.join(output_dir, "references.bib")
         pdf_path = os.path.join(output_dir, f"{job_name}.pdf")
 
+        
         # 1. & 2. Write artifact source files
         with open(tex_path, "w", encoding="utf-8") as f:
             f.write(tex_content)
@@ -48,13 +47,16 @@ class PDFCompiler:
         with open(bib_path, "w", encoding="utf-8") as f:
             f.write(bibtex_content)
 
+        
         # 3. Compilations
-        # First Pass
+                # First Pass
         await self._run_latex(output_dir, job_name)
         
+                
         # Biber Pass (bibliography linking)
         await self._run_biber(output_dir, job_name)
         
+                
         # Second Pass (embed cross-refs)
         await self._run_latex(output_dir, job_name)
         
@@ -75,7 +77,7 @@ class PDFCompiler:
     async def _run_biber(self, output_dir: str, job_name: str) -> None:
         cmd = [self.biber_bin, job_name]
         try:
-            # Biber failing doesn't necessarily crash latex in warning state
+                        # Biber failing doesn't necessarily crash latex in warning state
             await self._execute(cmd, output_dir)
         except LatexCompilationError as e:
             logger.warning("Biber compilation threw warnings/errors, LaTeX may still build: %s", e)
@@ -93,7 +95,7 @@ class PDFCompiler:
             
             if process.returncode != 0:
                 stdout_str = stdout.decode(errors="ignore")
-                # Attempt to extract LaTeX error
+                                # Attempt to extract LaTeX error
                 err_lines = [line for line in stdout_str.split('\n') if line.startswith('!') or "Error" in line]
                 extracted = "\n".join(err_lines[:5]) if err_lines else stdout_str[-500:]
                 

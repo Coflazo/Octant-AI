@@ -1,10 +1,6 @@
 """
-Octant AI — PULSE WebSocket Emitter and Connection Manager.
-
-Provides the ConnectionManager class for managing per-session WebSocket
-connections and the PulseEmitter class for emitting structured PULSE
-events at every agent milestone. Every PULSE payload is a JSON object
-conforming to the protocol schema defined in the project specification.
+Octant AI module
+writing this part was tricky ngl, just gluing things together atm
 """
 
 import asyncio
@@ -31,7 +27,7 @@ class ConnectionManager:
     """
 
     def __init__(self) -> None:
-        """Initialise empty connection and handler registries."""
+        """initialise empty connection and handler registries lol"""
         self.active_connections: Dict[str, WebSocket] = {}
         self.audio_handlers: Dict[
             str, Callable[[bytes], Coroutine[Any, Any, None]]
@@ -47,7 +43,7 @@ class ConnectionManager:
             websocket: The incoming WebSocket connection to accept.
             session_id: Unique identifier for this pipeline session.
         """
-        # Close any stale connection on the same session
+                # Close any stale connection on the same session
         if session_id in self.active_connections:
             logger.warning(
                 "Replacing existing WebSocket for session_id=%s", session_id
