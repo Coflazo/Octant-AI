@@ -1,106 +1,45 @@
-import React from "react";
-import { useVoiceInput } from "../../hooks/useVoiceInput";
+import { useState, useRef } from 'react';
 
-interface VoiceInputProps {
-  sessionId: string;
-  streamingTranscript: string;
-  isTranscriptionComplete: boolean;
-  onTranscriptLocked: (text: string) => void;
-}
+export default function VoiceInput({ sendMessage }: { sendMessage: (m: ArrayBuffer) => void }) {
+  const [recording, setRecording] = useState(false);
+  const mediaRecorder = useRef<MediaRecorder | null>(null);
 
-/**
- * VoiceInput Component.
- *
- * Captures microphone audio, streams 250ms chunks to Reson8 via the backend,
- * and displays the streaming partial transcripts.
- */
-export const VoiceInput: React.FC<VoiceInputProps> = ({
-  sessionId,
-  streamingTranscript,
-  isTranscriptionComplete,
-  onTranscriptLocked,
-}) => {
-  const {
-    isRecording,
-    isConnecting,
-    error,
-    startRecording,
-    stopRecording,
-  } = useVoiceInput();
-
-  // If the backend silence detector finalises the transcript,
-  // we automatically stop the mic and pass the text up.
-  React.useEffect(() => {
-    if (isTranscriptionComplete && isRecording) {
-      stopRecording();
-      onTranscriptLocked(streamingTranscript);
-    }
-  }, [isTranscriptionComplete, isRecording, streamingTranscript, onTranscriptLocked, stopRecording]);
-
-  const handleToggle = () => {
-    if (isRecording || isConnecting) {
-      stopRecording();
+  const toggleRecord = async () => {
+    if (!recording) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        mr.ondataavailable = (e) => {
+          if (e.data.size > 0 && e.data.arrayBuffer) {
+            e.data.arrayBuffer().then(buf => sendMessage(buf));
+          }
+        };
+        mr.start(500); // 500ms chunks
+        mediaRecorder.current = mr;
+        setRecording(true);
+      } catch (err) {
+        console.error("Mic access denied or error:", err);
+      }
     } else {
-      startRecording(sessionId);
+      if (mediaRecorder.current) {
+        mediaRecorder.current.stop();
+        mediaRecorder.current.stream.getTracks().forEach(t => t.stop());
+      }
+      setRecording(false);
     }
   };
 
   return (
-    <div className="bg-oct-surface border border-oct-border rounded p-4 mb-4 flex flex-col items-center justify-center">
-      <div className="flex flex-col items-center">
-        {/* Animated Microphone Button */}
-        <button
-          onClick={handleToggle}
-          disabled={isConnecting}
-          className={`relative flex items-center justify-center w-16 h-16 rounded-full transition-colors ${
-            isRecording
-              ? "bg-oct-green animate-pulse-green"
-              : isConnecting
-              ? "bg-oct-border"
-              : "bg-oct-border hover:bg-opacity-80 border-2 border-transparent hover:border-oct-green"
-          }`}
-          aria-label={isRecording ? "Stop dictation" : "Start dictation"}
-        >
-          {isRecording ? (
-            /* Stop Icon */
-            <div className="w-5 h-5 bg-oct-deep rounded-sm"></div>
-          ) : (
-            /* Mic Icon (SVG) */
-            <svg
-              className="w-6 h-6 text-oct-text"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-              />
-            </svg>
-          )}
-        </button>
-
-        <span className="mt-2 text-sm text-oct-text-dim">
-          {isRecording ? "Listening..." : isConnecting ? "Connecting..." : "Tap to speak thesis"}
-        </span>
+    <div className="flex items-center gap-3 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+      <button 
+        onClick={toggleRecord}
+        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${recording ? 'bg-red-500/20 text-red-500 animate-pulse border border-red-500' : 'bg-octNavy hover:bg-octNavy/80 text-white'}`}
+      >
+        <span className="text-xl leading-none">{recording ? '■' : '🎤'}</span>
+      </button>
+      <div className="text-sm text-gray-400">
+        {recording ? 'Listening (Reson8 Active)...' : 'Dictate Hypothesis'}
       </div>
-
-      {error && (
-        <div className="mt-3 text-sm text-oct-red text-center">
-          {error}
-        </div>
-      )}
-
-      {/* Real-time Streaming Transcript Display */}
-      {streamingTranscript && !isTranscriptionComplete && (
-        <div className="mt-4 w-full p-3 bg-oct-deep-light border border-oct-border rounded shadow-inner text-sm text-oct-text italic min-h-[60px] max-h-[120px] overflow-y-auto">
-          "{streamingTranscript}"
-          <span className="inline-block w-1.5 h-4 ml-1 bg-oct-green animate-pulse align-middle"></span>
-        </div>
-      )}
     </div>
   );
-};
+}
