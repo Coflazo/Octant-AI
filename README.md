@@ -1,6 +1,10 @@
+<p align="center">
+  <img src="assets/Octant_Logo.png" width="150" alt="Octant AI Logo" />
+</p>
+
 <div align="center">
 
-# Octant AI 🐙
+# Octant AI 
 ### Autonomous Research & Quantitative Analysis Workbench
 
 <br/>
@@ -61,7 +65,7 @@
 
 ---
 
-## 🐙 What Is Octant AI?
+##  What Is Octant AI?
 
 Octant AI is a **privacy-first, autonomous quantitative research workbench**. A quant researcher inputs a natural-language investment thesis spoken via the Reson8 voice API or typed and the system:
 
@@ -77,7 +81,7 @@ Every stage streams real-time status updates to the React frontend via a custom 
 
 ---
 
-## 🎯 The Problem It Solves
+##  The Problem It Solves
 
 A senior quantitative researcher at a hedge fund faces a research cycle that typically unfolds over **3–7 days** per hypothesis:
 
@@ -100,12 +104,12 @@ For retail algorithmic traders the 300,000+ users on QuantConnect, Alpaca, and I
 
 ```mermaid
 flowchart TD
-    subgraph INPUT["🎙️ RESEARCHER INPUT"]
+    subgraph INPUT[" RESEARCHER INPUT"]
         R8["Reson8 Voice-to-Text\nStreaming transcription API"]
         TXT["Text Input\nExchange selector · Time range"]
     end
 
-    subgraph DUST["⚙️  DUST ORCHESTRATOR"]
+    subgraph DUST["  DUST ORCHESTRATOR"]
         INPUT
     end
 
@@ -121,7 +125,7 @@ flowchart TD
 
     A5H["⬡  AGENT 5 Report Architect\nGemini 2.5 Pro narrative · pdflatex 2-pass · matplotlib 300 DPI\nIMRaD · BibTeX · listings appendix · LaTeX escape"]
 
-    subgraph OUTPUT["📄 PDF REPORT DELIVERABLE"]
+    subgraph OUTPUT[" PDF REPORT DELIVERABLE"]
         O1["IMRaD report\ncitations · charts"]
         O2["Backtest code\nappendix · VBT"]
         O3["Metrics tables\nSharpe · VaR · Greeks"]
@@ -153,7 +157,7 @@ flowchart TD
 
 ```mermaid
 graph TB
-    subgraph FE["🖥️  FRONTEND LAYER"]
+    subgraph FE["  FRONTEND LAYER"]
         direction LR
         F1["React 18\nTypeScript"]
         F2["Tailwind CSS\nDark theme"]
@@ -162,7 +166,7 @@ graph TB
         F5["Reson8\nVoice UI"]
     end
 
-    subgraph OR["⚙️  ORCHESTRATION LAYER"]
+    subgraph OR["  ORCHESTRATION LAYER"]
         direction LR
         O1["Dust.tt\nAgent nodes"]
         O2["FastAPI\nAPI gateway"]
@@ -170,7 +174,7 @@ graph TB
         O4["Uvicorn\nASGI server"]
     end
 
-    subgraph CL["🧮  COMPUTATION LAYER"]
+    subgraph CL["  COMPUTATION LAYER"]
         direction LR
         subgraph LLM["LLM"]
             C1["Gemini 2.5 Pro\nReasoning"]
@@ -190,7 +194,7 @@ graph TB
         end
     end
 
-    subgraph DL["📦  DELIVERY LAYER"]
+    subgraph DL["  DELIVERY LAYER"]
         direction LR
         D1["pdflatex\n2-pass compile"]
         D2["matplotlib\nFigure export"]
@@ -217,7 +221,7 @@ graph TB
 
 ```mermaid
 graph LR
-    subgraph RAW["📊 Raw Inputs"]
+    subgraph RAW[" Raw Inputs"]
         P["OHLCV price series"]
         OPT["Options chain IV"]
         MAC["Macro data FRED"]
@@ -225,7 +229,7 @@ graph LR
         FF5["FF5 factors Ken French"]
     end
 
-    subgraph TS["🌊 Time-Series Models"]
+    subgraph TS[" Time-Series Models"]
         ADF["ADF stationarity test"]
         ARIMA["ARIMA p,d,q AIC selection"]
         GARCH["GARCH/GJR-GARCH EGARCH fit"]
@@ -233,7 +237,7 @@ graph LR
         FFT["FFT · Wavelet cycle detection"]
     end
 
-    subgraph CS["📐 Cross-Sectional"]
+    subgraph CS[" Cross-Sectional"]
         OLS["OLS factor reg Newey-West SE"]
         ROLL["Rolling regression alpha decay"]
         PCA["PCA · Marchenko-Pastur filter"]
@@ -241,7 +245,7 @@ graph LR
         OU["Ornstein-Uhlenbeck half-life fit"]
     end
 
-    subgraph PORT["💼 Portfolio Models"]
+    subgraph PORT[" Portfolio Models"]
         GBM["GBM · Merton jump-diffusion"]
         MVO["MVO efficient frontier LW shrink"]
         BAY["Bayesian updating posterior Sharpe"]
@@ -249,7 +253,7 @@ graph LR
         MC["Monte Carlo 50k path sim"]
     end
 
-    subgraph RISK["⚠️ Risk / Output"]
+    subgraph RISK[" Risk / Output"]
         SH["Sharpe · Sortino Info · Omega"]
         VAR["VaR · ES 95% · 99%"]
         DD["Max drawdown Calmar ratio"]
@@ -300,7 +304,7 @@ graph LR
 
 ```mermaid
 graph TB
-    subgraph ACAD["📚 Academic / Literature Sources"]
+    subgraph ACAD[" Academic / Literature Sources"]
         direction LR
         AX["arXiv q-fin\nREST · no key\nST·PM·TR·MF·RM"]
         SS["Semantic Scholar\n100 req/s free\ntldr · influence scores"]
@@ -310,21 +314,21 @@ graph TB
         MF["Modern Finance\nopen-access OA\nPyMuPDF extract"]
     end
 
-    subgraph MKTD["📈 Market Data Sources"]
+    subgraph MKTD[" Market Data Sources"]
         direction LR
         YF["yfinance\nOHLCV · 20yr · global\nauto_adjust=True"]
         OB["OpenBB SDK\nfundamentals · short int\nFRED macro data"]
         FA["fal.ai\nfast inference API\nchart image gen"]
     end
 
-    subgraph SENTI["💬 Sentiment Sources"]
+    subgraph SENTI[" Sentiment Sources"]
         direction LR
         WB["WSBTrends Go\nsubprocess call\nmention counts JSON"]
         PW["Playwright\nheadless Chromium\nWSB · 6 subreddits"]
         GF["Gemini Flash\nsentiment extraction\nstructured JSON out"]
     end
 
-    HUB["⚡ FastAPI Data Layer\nAsync Hub"]
+    HUB[" FastAPI Data Layer\nAsync Hub"]
 
     subgraph AGENTS["Destination Agents"]
         AG2["Agent 2\nLiterature"]
@@ -682,7 +686,7 @@ flowchart TD
 
     COMP["pdflatex Two-Pass Compile  cross-references\nstdout/stderr captured · error log parsed · LatexCompilationError on fail"]
 
-    PDF["📄 PDF DELIVERABLE\nIMRaD · citations · figures · appendices · /api/reports/{filename}"]
+    PDF[" PDF DELIVERABLE\nIMRaD · citations · figures · appendices · /api/reports/{filename}"]
 
     INP --> GEMNARR & FIGGEN
     N1 --> N2 --> N3 --> N4 --> N5 --> N6 --> N7 --> N8
@@ -730,19 +734,19 @@ graph LR
         AG5["Agent 5\nReport Architect"]
     end
 
-    subgraph GEMINI["🔵 Google DeepMind"]
+    subgraph GEMINI[" Google DeepMind"]
         GM["Gemini 2.5 Pro\nHypothesis decomposition\nPaper abstract synthesis\nLaTeX narrative writing\nResults interpretation\n─────────────────\nGemini Flash\nParallel abstract batches\nReddit NLP extraction\ntext-embedding-004 ChromaDB"]
     end
 
-    subgraph RESON8["🟢 Reson8"]
+    subgraph RESON8[" Reson8"]
         RS["Hyper-Customisable STT\nconsole.reson8.dev · API key\ndocs.reson8.dev · Europe-first\n─────────────────\nStreaming transcription endpoint\n250ms audio chunk streaming\n2s silence → finalise thesis\nHands-free thesis dictation"]
     end
 
-    subgraph FAL["🔴 fal.ai"]
+    subgraph FAL[" fal.ai"]
         FL["Fast Inference API\n\$50 credit · free tier\ntecheurope-amsterdam coupon\n─────────────────\nUse 1 Universe Builder\nStyled sparkline PNG per ticker\nfal-client Python SDK\n─────────────────\nUse 2 Report Architect\nVol surface cover art PNG\n\\includegraphics title page"]
     end
 
-    subgraph DUSTT["🟡 Dust.tt"]
+    subgraph DUSTT[" Dust.tt"]
         DU["Agent Orchestration Layer\n5 agent nodes defined\nInput/output schema validation\nError handling + retry logic\nExponential backoff with jitter\n─────────────────\nSession state management\nParallel band A2 ∥ A3 trigger\nTimeout: A1=60s A2/A3=300s\nA4=600s A5=300s\nPipelineStoppedError support"]
     end
 
@@ -756,7 +760,7 @@ graph LR
     DU --> AG2 & AG3 & AG4 & AG5
 
     subgraph BADGE["Hackathon Compliance"]
-        BC["✅ 4 of 6 partner technologies integrated\nMinimum 3 required exceeded"]
+        BC[" 4 of 6 partner technologies integrated\nMinimum 3 required exceeded"]
     end
 
     style GEMINI fill:#0f2a5e,color:#F8F9FA
@@ -769,7 +773,7 @@ graph LR
 
 ---
 
-## 🧮 Mathematical Model Registry
+##  Mathematical Model Registry
 
 All 18 models are applied per hypothesis by Agent 4.
 
@@ -968,7 +972,7 @@ Cited methodology: Harvey, Liu & Zhu (2016) *"And the Cross-Section of Expected 
 
 ---
 
-## ⚡ The PULSE WebSocket Protocol
+##  The PULSE WebSocket Protocol
 
 PULSE (Proprietary Unified Live Status Emission) is the custom WebSocket event schema that streams agent state to the frontend in real time.
 
@@ -1006,7 +1010,7 @@ PULSE (Proprietary Unified Live Status Emission) is the custom WebSocket event s
 
 ---
 
-## 📊 Performance Metrics All 18
+##  Performance Metrics All 18
 
 | Category | Metric | Formula / Notes |
 |---|---|---|
@@ -1036,7 +1040,7 @@ PULSE (Proprietary Unified Live Status Emission) is the custom WebSocket event s
 
 ---
 
-## 📄 Report Structure IMRaD Format
+##  Report Structure IMRaD Format
 
 The final PDF follows the academic IMRaD format adapted for quantitative finance:
 
@@ -1075,12 +1079,12 @@ octant_research_YYYY-MM-DD.pdf
 | Correlation clustermap | Seaborn clustermap | Hierarchical clustering · blue-white-red diverging |
 | Rolling Sharpe | Line + CI band | 12-month rolling window · dashed zero line |
 | Eigenvalue spectrum | Bar chart | MP boundary overlay · signal vs noise PCs |
-| Wavelet coherence | Colourmap | Time-varying correlation: sentiment ↔ returns |
+| Wavelet coherence | Colourmap | Time-varying correlation: sentiment  returns |
 | Factor loading heatmap | Heatmap | Hypothesis × FF5 factor · colour = loading magnitude |
 
 ---
 
-## 🤝 Hackathon Partner Technologies
+##  Hackathon Partner Technologies
 
 | Partner | Integration Points | Why Substantive |
 |---|---|---|
@@ -1089,11 +1093,11 @@ octant_research_YYYY-MM-DD.pdf
 | **fal.ai** | Ticker sparkline images (Agent 3) · vol surface cover PNG (Agent 5) | Two distinct use-cases; graceful degradation on failure |
 | **Dust.tt** | All 5 agent nodes · retry logic · parallel A2∥A3 · session state | Replaces custom state-machine; manages timeout/backoff |
 
-> ✅ **4 of 6 partner technologies integrated minimum 3 requirement exceeded**
+>  **4 of 6 partner technologies integrated minimum 3 requirement exceeded**
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 octant-ai/
@@ -1194,7 +1198,7 @@ octant-ai/
 
 ---
 
-## 🚀 Installation
+##  Installation
 
 ### Prerequisites
 
@@ -1255,10 +1259,10 @@ npm run dev
 
 ---
 
-## ⚡ Quick Start
+##  Quick Start
 
 1. Open `http://localhost:3000`
-2. Click the 🎙️ microphone button and speak your thesis or type it in the text area
+2. Click the  microphone button and speak your thesis or type it in the text area
 3. Select your target exchanges (NYSE, NASDAQ, LSE, etc.)
 4. Set your backtest time range (default: 10 years)
 5. Optionally set a sector filter
@@ -1270,7 +1274,7 @@ npm run dev
 
 ---
 
-## 🎯 Demo Thesis Examples
+##  Demo Thesis Examples
 
 ```
 "Test a mean-reversion strategy on NVDA that enters when RSI(14) < 30 
@@ -1290,7 +1294,7 @@ semiconductor pairs decreases during Fed tightening cycles."
 
 ---
 
-## ⚠️ Known Limitations
+##  Known Limitations
 
 | Limitation | Details | Mitigation Applied |
 |---|---|---|
@@ -1304,7 +1308,7 @@ semiconductor pairs decreases during Fed tightening cycles."
 
 ---
 
-## 📜 License
+##  License
 
 MIT License see [LICENSE](LICENSE)
 
@@ -1312,7 +1316,7 @@ MIT License see [LICENSE](LICENSE)
 
 <div align="center">
 
-**Octant AI 🐙** · Built at {Tech: Europe} Amsterdam AI Hackathon · March 2025
+**Octant AI ** · Built at {Tech: Europe} Amsterdam AI Hackathon · March 2025
 
 *The future of quantitative finance is open.*
 
