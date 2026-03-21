@@ -1,42 +1,86 @@
 {
-  "name": "Octant AI Dust Pipeline",
-  "description": "5-agent sequence for autonomous quantitative research",
-  "version": "1.0",
-  "agents": [
+  "workflow_name": "octant_pipeline",
+  "version": "1.0.0",
+  "description": "5-stage concurrent agentic financial pipeline execution",
+  "config": {
+    "retry_policy": {
+      "max_attempts": 3,
+      "backoff": "exponential",
+      "initial_interval_ms": 1000
+    }
+  },
+  "nodes": [
     {
-      "id": "hypothesis_engine",
-      "model": "google/gemini-2.5-pro",
-      "description": "Decomposes unstructured natural language into strictly quantitative sub-hypotheses.",
-      "timeout_sec": 45,
-      "max_retries": 1
+      "id": "A1",
+      "name": "Hypothesis Engine",
+      "type": "action",
+      "timeout": 60,
+      "input_schema": {
+        "audio_bin": "bytes",
+        "thesis_text": "string"
+      },
+      "output_schema": {
+        "hypotheses": "list[HypothesisObject]"
+      }
     },
     {
-      "id": "literature",
-      "model": "google/gemini-flash",
-      "description": "Searches SSNR, CORE, arXiv and evaluates abstract relevance to the hypotheses.",
-      "timeout_sec": 60,
-      "max_retries": 3
+      "id": "A2",
+      "name": "Literature Agent",
+      "type": "action",
+      "timeout": 300,
+      "depends_on": ["A1"],
+      "input_schema": {
+        "hypotheses": "list[HypothesisObject]"
+      },
+      "output_schema": {
+        "citations_db": "dict[str, list]"
+      }
     },
     {
-      "id": "universe",
-      "model": "google/gemini-flash",
-      "description": "Applies sector, liquidity, and sentiment logic to construct an equity universe from given exchanges.",
-      "timeout_sec": 30,
-      "max_retries": 2
+      "id": "A3",
+      "name": "Universe Builder",
+      "type": "action",
+      "timeout": 300,
+      "depends_on": ["A1"],
+      "input_schema": {
+        "hypotheses": "list[HypothesisObject]",
+        "exchanges": "list[str]",
+        "sector": "string",
+        "time_range": "list[str]"
+      },
+      "output_schema": {
+        "universe_result": "UniverseBuildResult"
+      }
     },
     {
-      "id": "backtest",
-      "model": "google/gemini-2.5-pro",
-      "description": "Selects appropriate mathematical models and parameterises the vectorised backtester.",
-      "timeout_sec": 90,
-      "max_retries": 1
+      "id": "A4",
+      "name": "Backtesting Engine",
+      "type": "action",
+      "timeout": 600,
+      "depends_on": ["A2", "A3"],
+      "input_schema": {
+        "universe_result": "UniverseBuildResult",
+        "hypotheses": "list[HypothesisObject]",
+        "citations_db": "dict[str, list]"
+      },
+      "output_schema": {
+        "results_manifest": "dict[str, PerformanceReport]"
+      }
     },
     {
-      "id": "architect",
-      "model": "google/gemini-2.5-pro",
-      "description": "Synthesises numerical results, metrics, and citations into an IMRaD LaTeX report stream.",
-      "timeout_sec": 120,
-      "max_retries": 0
+      "id": "A5",
+      "name": "Report Architect",
+      "type": "action",
+      "timeout": 300,
+      "depends_on": ["A4"],
+      "input_schema": {
+        "hypotheses": "list[HypothesisObject]",
+        "citations_db": "dict[str, list]",
+        "results_manifest": "dict[str, PerformanceReport]"
+      },
+      "output_schema": {
+        "pdf_path": "string"
+      }
     }
   ]
 }
