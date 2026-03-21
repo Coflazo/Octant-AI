@@ -1,6 +1,5 @@
-import React, from "react";
+import React from "react";
 import { useVoiceInput } from "../../hooks/useVoiceInput";
-import { formatETA } from "../../utils/formatters";
 
 interface VoiceInputProps {
   sessionId: string;
