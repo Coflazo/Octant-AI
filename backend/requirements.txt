@@ -72,3 +72,4 @@ hmmlearn==0.3.0
 scikit-learn==1.4.1
 vectorbt==0.24.4
 seaborn==0.13.2
+pytest==8.1.1

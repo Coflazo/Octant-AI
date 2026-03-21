@@ -1,32 +1,23 @@
-# ──────────────────────────────────────────────────────────────
-# Octant AI — Docker Compose
-# Usage: docker-compose up --build
-# ──────────────────────────────────────────────────────────────
-
-version: "3.9"
+version: "3.8"
 
 services:
-  # ── FastAPI Backend ──────────────────────────────────────────
   backend:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
-    container_name: octant-backend
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: octant_backend
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app/backend
-      - ./reports:/app/reports
       - ./data:/app/data
-      - ./latex_templates:/app/latex_templates
-    env_file:
-      - .env
+      - ./reports:/tmp/octant_reports
     environment:
-      - PYTHONUNBUFFERED=1
-      - CHROMA_DB_PATH=/app/data/chromadb
-      - REPORTS_OUTPUT_PATH=/app/reports
-      - LATEX_TEMPLATES_PATH=/app/latex_templates
-    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - RESON8_API_KEY=${RESON8_API_KEY}
+      - FAL_API_KEY=${FAL_API_KEY}
+      - LOG_LEVEL=DEBUG
+      - LOG_FORMAT=pretty
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -34,17 +25,18 @@ services:
       timeout: 10s
       retries: 3
 
-  # ── React Frontend (Vite dev server) ─────────────────────────
   frontend:
     image: node:18-alpine
-    container_name: octant-frontend
+    container_name: octant_frontend
     working_dir: /app
     ports:
-      - "5173:5173"
+      - "3000:3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
-    restart: unless-stopped
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 3000"
+    environment:
+      - VITE_API_BASE=http://localhost:8000
     depends_on:
       - backend
+    restart: unless-stopped
