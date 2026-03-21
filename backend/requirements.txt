@@ -23,18 +23,18 @@ pandas-datareader==0.10.0
 
 # ── Quantitative / Mathematical Stack ──────────────────────
 numpy==1.26.4
-scipy==1.14.1
+scipy==1.13.1
 statsmodels==0.14.4
 scikit-learn==1.6.1
 arch==7.2.0
 hmmlearn==0.3.3
-pywt==1.8.0
+PyWavelets==1.5.0
 
 # ── Backtesting ────────────────────────────────────────────
 vectorbt==0.26.2
 
 # ── Visualization ──────────────────────────────────────────
-matplotlib==3.10.0
+matplotlib==3.9.4
 seaborn==0.13.2
 
 # ── Vector Database ────────────────────────────────────────
