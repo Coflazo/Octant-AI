@@ -1,0 +1,50 @@
+# ──────────────────────────────────────────────────────────────
+# Octant AI — Docker Compose
+# Usage: docker-compose up --build
+# ──────────────────────────────────────────────────────────────
+
+version: "3.9"
+
+services:
+  # ── FastAPI Backend ──────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: octant-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app/backend
+      - ./reports:/app/reports
+      - ./data:/app/data
+      - ./latex_templates:/app/latex_templates
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - CHROMA_DB_PATH=/app/data/chromadb
+      - REPORTS_OUTPUT_PATH=/app/reports
+      - LATEX_TEMPLATES_PATH=/app/latex_templates
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── React Frontend (Vite dev server) ─────────────────────────
+  frontend:
+    image: node:18-alpine
+    container_name: octant-frontend
+    working_dir: /app
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    restart: unless-stopped
+    depends_on:
+      - backend

@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+/* ── Octant AI Design System ──────────────────────────────── */
+
+@theme {
+  --color-oct-deep: #0A0B0D;
+  --color-oct-deep-light: #12131A;
+  --color-oct-surface: #1A1B23;
+  --color-oct-border: #2A2B35;
+  --color-oct-green: #00C07A;
+  --color-oct-green-dk: #007A4D;
+  --color-oct-green-glow: rgba(0, 192, 122, 0.3);
+  --color-oct-text: #F8F9FA;
+  --color-oct-text-dim: #9CA3AF;
+  --color-oct-red: #EF4444;
+  --color-oct-amber: #F59E0B;
+  --color-oct-blue: #3B82F6;
+}
+
+/* ── Base resets ──────────────────────────────────────────── */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: var(--color-oct-deep);
+  color: var(--color-oct-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Custom animations ───────────────────────────────────── */
+
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 var(--color-oct-green-glow); }
+  50% { box-shadow: 0 0 20px 8px var(--color-oct-green-glow); }
+}
+
+@keyframes glow-border {
+  0%, 100% { border-color: var(--color-oct-green); opacity: 0.6; }
+  50% { border-color: var(--color-oct-green); opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-pulse-green {
+  animation: pulse-green 2s infinite;
+}
+
+.animate-glow-border {
+  animation: glow-border 2s infinite;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out both;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-oct-surface) 25%,
+    var(--color-oct-border) 50%,
+    var(--color-oct-surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ── Scrollbar styling ───────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-oct-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-oct-text-dim);
+}

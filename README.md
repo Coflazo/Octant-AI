@@ -1,70 +1,158 @@
-# Getting Started with Create React App
+# 🧭 Octant AI
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**Autonomous Quantitative Research Workbench**
 
-## Available Scripts
+Octant AI is a privacy-first, autonomous quantitative research platform. Input a natural-language investment thesis — typed or spoken via Reson8 voice API — and the system will:
 
-In the project directory, you can run:
+1. **Decompose** it into 4–8 testable sub-hypotheses (Gemini 2.5 Pro)
+2. **Research** academic literature from 6 sources (arXiv, Semantic Scholar, OpenAlex, SSRN, CORE, Modern Finance)
+3. **Build** a qualifying equity universe across 10 global exchanges with live data (yfinance + OpenBB)
+4. **Backtest** with dual engines (VectorBT + custom explainable) and 18 mathematical models
+5. **Compile** a publication-quality IMRaD-format PDF report typeset in LaTeX
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Architecture
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     React 18 + TypeScript + Tailwind            │
+│  ┌──────────┐  ┌───────────────────────────┐  ┌──────────────┐ │
+│  │ Left     │  │ Center Panel              │  │ Right Panel  │ │
+│  │ Panel    │  │ Pipeline · Hypotheses ·   │  │ Report ·     │ │
+│  │ Voice ·  │  │ Citations · Tickers ·     │  │ Metrics ·    │ │
+│  │ Thesis · │  │ Results Matrix · Log      │  │ Download PDF │ │
+│  │ Controls │  │                           │  │              │ │
+│  └──────────┘  └───────────────────────────┘  └──────────────┘ │
+│                         │ PULSE WebSocket                      │
+├─────────────────────────┼──────────────────────────────────────┤
+│                    FastAPI Backend                              │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────────────┐ │
+│  │ Agent 1  │  │ Agent 2  │  │ Agent 3  │  │ Math Engine    │ │
+│  │ Hypothe- │  │ Litera-  │  │ Universe │  │ ARIMA · GARCH  │ │
+│  │ sis      │→ │ ture     │→ │ Builder  │→ │ HMM · BS · OU  │ │
+│  │ Engine   │  │ Agent    │  │          │  │ MVO · PCA · MC │ │
+│  └──────────┘  └──────────┘  └──────────┘  └────────────────┘ │
+│       │              │            │               │            │
+│       │   ┌──────────┴────────┐   │    ┌──────────┴─────────┐ │
+│       │   │ Agent 4: Backtest │←──┘    │ Agent 5: Report    │ │
+│       │   │ VectorBT + Custom │───────→│ LaTeX → PDF        │ │
+│       │   └───────────────────┘        └────────────────────┘ │
+└───────┼───────────────────────────────────────────────────────┘
+        │
+   Dust.tt Orchestrator
+```
 
-### `npm test`
+## Tech Stack
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+| Layer | Technology |
+|-------|-----------|
+| Backend | Python 3.11, FastAPI, Uvicorn, asyncio |
+| Orchestration | Dust.tt |
+| Frontend | React 18, TypeScript, Tailwind CSS |
+| Voice Input | Reson8 (console.reson8.dev) |
+| LLM | Google Gemini 2.5 Pro + Gemini Flash |
+| Price Data | yfinance |
+| Fundamentals | OpenBB SDK |
+| Chart Images | fal.ai |
+| Backtesting | VectorBT + custom Python engine |
+| Sentiment | WSBTrends (Go) + Playwright scraper |
+| Math | NumPy, SciPy, statsmodels, arch, scikit-learn |
+| Report | LaTeX (pdflatex) + matplotlib |
+| Real-time | WebSocket (PULSE protocol) |
+| Vector DB | ChromaDB |
 
-### `npm run build`
+## Prerequisites
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- **Python 3.11+** with pip
+- **Node.js 18+** with npm
+- **pdflatex** (TeX Live or MacTeX) for report compilation
+- API keys: Google Gemini, Reson8, fal.ai, Dust.tt, OpenBB
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Quick Start
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 1. Clone and configure
 
-### `npm run eject`
+```bash
+git clone https://github.com/AtillaErsezen/Octant-AI.git
+cd Octant-AI
+cp .env.example .env
+# Edit .env with your API keys
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 2. Backend setup
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+cd backend
+python3 -m venv venv
+source venv/bin/activate    # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+playwright install chromium
+cd ..
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### 3. Frontend setup
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```bash
+cd frontend
+npm install
+cd ..
+```
 
-## Learn More
+### 4. Run
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+# Terminal 1 — Backend
+cd backend && uvicorn backend.main:app --reload --port 8000
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+# Terminal 2 — Frontend
+cd frontend && npm run dev
+```
 
-### Code Splitting
+Open `http://localhost:5173` in your browser.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Docker alternative
 
-### Analyzing the Bundle Size
+```bash
+docker-compose up --build
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Demo Thesis Examples
 
-### Making a Progressive Web App
+- "Test momentum reversal in small-cap energy stocks when VIX spikes above 30"
+- "Evaluate mean reversion in pairs of European bank stocks using cointegration"
+- "Analyse whether Reddit sentiment predicts abnormal returns in meme stocks"
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Project Structure
 
-### Advanced Configuration
+```
+octant-ai/
+├── backend/
+│   ├── main.py                    # FastAPI app + WebSocket
+│   ├── config.py                  # Central configuration
+│   ├── pulse.py                   # PULSE WebSocket emitter
+│   ├── agents/                    # 5 pipeline agents
+│   ├── math_engine/               # 18 mathematical models
+│   ├── data/                      # Data fetchers + scrapers
+│   ├── sentiment/                 # Signal construction
+│   ├── report/                    # LaTeX + matplotlib + PDF
+│   ├── voice/                     # Reson8 integration
+│   └── requirements.txt
+├── frontend/
+│   ├── src/
+│   │   ├── components/            # Left/Center/Right panels
+│   │   ├── hooks/                 # WebSocket + voice hooks
+│   │   ├── types/pulse.ts         # PULSE protocol types
+│   │   └── utils/formatters.ts
+│   ├── package.json
+│   └── vite.config.ts
+├── reports/                       # Generated PDF output
+├── data/                          # ChromaDB + cached data
+├── latex_templates/               # LaTeX .tex templates
+├── docker-compose.yml
+└── .env.example
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## License
 
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Proprietary — all rights reserved.
