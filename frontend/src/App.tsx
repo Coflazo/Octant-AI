@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { usePulseWebSocket } from './hooks/usePulseWebSocket';
-import LeftPanel from './components/LeftPanel';
-import CenterPanel from './components/CenterPanel';
-import RightPanel from './components/RightPanel';
+import LeftPanel from './components/LeftPanel/index';
+import CenterPanel from './components/CenterPanel/index';
+import RightPanel from './components/RightPanel/index';
 import './index.css';
 
 export default function App() {
