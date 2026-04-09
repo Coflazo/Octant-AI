@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { usePulseWebSocket, PulseEvent } from './hooks/usePulseWebSocket';
+import { usePulseWebSocket } from './hooks/usePulseWebSocket';
+import type { PulseEvent } from './hooks/usePulseWebSocket';
 import LeftPanel from './components/LeftPanel/index';
 import CenterPanel from './components/CenterPanel/index';
 import RightPanel from './components/RightPanel/index';
@@ -8,7 +9,7 @@ import './index.css';
 
 export default function App() {
   const [sessionId] = useState(() => uuidv4());
-  const { status: wsStatus, events, sendMessage } = usePulseWebSocket(sessionId);
+  const { status: wsStatus, events } = usePulseWebSocket(sessionId);
 
   // Global State
   const [pipelineStatus, setPipelineStatus] = useState<string>("idle");
