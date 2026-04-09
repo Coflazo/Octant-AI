@@ -1,1 +1,1 @@
-"""octant ai — test suite lol"""
+"""Octant AI — Test suite."""

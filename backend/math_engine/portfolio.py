@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Portfolio optimization: covariance shrinkage, efficient frontier, risk metrics."""
 
 import logging
 from dataclasses import dataclass
@@ -51,7 +48,7 @@ class DrawdownResult:
 # --- Matrix Algebra ---
 
 def nearest_positive_definite(A: np.ndarray) -> np.ndarray:
-    """finds the nearest positive-definite matrix (higham 1988 iterative algorithm) lol"""
+    """Find the nearest positive-definite matrix (Higham 1988)."""
     n = A.shape[0]
     B = (A + A.T) / 2
     _, s, V = np.linalg.svd(B)
@@ -161,7 +158,7 @@ def compute_efficient_frontier(
     n_points: int = 50, 
     long_only: bool = True
 ) -> Optional[EfficientFrontierResult]:
-    """builds the markowitz efficient frontier over 50 portfolio permutations via slsqp lol"""
+    """Build the Markowitz efficient frontier via SLSQP."""
     n = len(expected_returns)
     if n < 2: return None
     
@@ -239,7 +236,7 @@ def compute_efficient_frontier(
 # --- Risk Metrics ---
 
 def compute_portfolio_var_es(paths: np.ndarray, confidence: float = 0.95, horizon_days: int = 1) -> VaRESResult:
-    """computes parametric/historical value at risk and expected shortfall from simulated paths matrix lol"""
+    """Compute VaR and expected shortfall from simulated paths."""
                 # paths logic: assumes paths is shape (n_paths, time_steps, n_assets) or (n_paths, time_steps)
     if len(paths.shape) == 3:
                                 # Equal weighted portfolio return at horizon
@@ -262,7 +259,7 @@ def compute_portfolio_var_es(paths: np.ndarray, confidence: float = 0.95, horizo
     return VaRESResult(var, es, confidence, horizon_days)
 
 def compute_calmar_ratio(returns: pd.Series) -> float:
-    """annualised return divided by maximum drawdown magnitude lol"""
+    """Annualised return divided by maximum drawdown magnitude."""
     dd_res = compute_max_drawdown(returns)
     if dd_res.max_drawdown == 0:
         return 0.0
@@ -276,7 +273,7 @@ def compute_calmar_ratio(returns: pd.Series) -> float:
     return float(cagr / dd_res.max_drawdown)
 
 def compute_max_drawdown(returns: pd.Series) -> DrawdownResult:
-    """computes maximum drawdown magnitude, duration, and bounds lol"""
+    """Compute maximum drawdown magnitude, duration, and bounds."""
     if len(returns) == 0:
         return DrawdownResult(0.0, 0, "", "", "")
 

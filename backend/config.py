@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Application configuration and environment variable management."""
 
 from functools import lru_cache
 from typing import List, Optional

@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Reson8 streaming transcription API client."""
 
 import asyncio
 import logging
@@ -17,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class Reson8Error(Exception):
-    """raised when the reson8 api returns an error or rate limit lol"""
+    """Raised when the Reson8 API returns an error or rate limit."""
     pass
 
 
@@ -30,7 +27,7 @@ class Reson8Client:
     """
 
     def __init__(self) -> None:
-        """initialise the client with config settings lol"""
+        """Initialise the client with config settings."""
         settings = get_settings()
         self.api_key = settings.RESON8_API_KEY
         self.base_url = settings.RESON8_BASE_URL.rstrip("/")

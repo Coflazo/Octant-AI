@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Performance analytics suite for backtest output."""
 
 import logging
 from dataclasses import dataclass, field
@@ -59,7 +56,7 @@ class PerformanceReport:
 
 
 class PerformanceCalculator:
-    """master class running all 18 mathematical models over backtest output lol"""
+    """Master class running all 18 mathematical models over backtest output."""
 
     def __init__(self):
                                 # Survivorship bias annual penalties
@@ -82,7 +79,7 @@ class PerformanceCalculator:
         hypothesis: HypothesisObject,
         prior_literature_sharpe: Optional[float]
     ) -> PerformanceReport:
-        """computes the full 18-metric suite required for the reporting stage lol"""
+        """Compute the full 18-metric suite for the reporting stage."""
         df = strategy_returns.dropna()
         if len(df) < 30:
             logger.warning("Strategy return series too short for full compute.")

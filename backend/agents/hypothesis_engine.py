@@ -1,17 +1,15 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Agent 1: Hypothesis Engine — decomposes investment theses into testable sub-hypotheses."""
 
+import asyncio
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 import google.generativeai as genai
 from pydantic import BaseModel, Field
 
 from backend.config import get_settings
-from backend.pulse import ConnectionManager, PulseEmitter
+from backend.pulse import PulseEmitter
 
 logger = logging.getLogger(__name__)
 
@@ -42,44 +40,25 @@ class HypothesisObject(BaseModel):
 
 
 class HypothesisEngine:
-    """Agent 1: Decomposes unstructured theses into testable components.
+    """Agent 1: Decomposes unstructured theses into testable components."""
 
-    Attributes:
-        session_id: The pipeline session identifier.
-        pulse: Emitter for communicating progress and results to the UI.
-        model: The configured Gemini generative model instance.
-    """
-
-    def __init__(self, session_id: str, manager: ConnectionManager) -> None:
-        """Initialise the Hypothesis Engine with Gemini credentials.
+    def __init__(self, gemini_client) -> None:
+        """Initialise the Hypothesis Engine with the Gemini client.
 
         Args:
-            session_id: Unique pipeline run identifier.
-            manager: ConnectionManager for PULSE events.
+            gemini_client: The configured google.generativeai module.
         """
-        self.session_id = session_id
-        self.pulse = PulseEmitter(session_id, manager)
-
+        self.gemini = gemini_client
         settings = get_settings()
-        if not settings.GEMINI_API_KEY:
-            logger.warning("GEMINI_API_KEY not found in environment.")
-
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-                                # Using Gemini 1.5 Pro (as 2.5 Pro isn't GA in all SDKs yet, 
-                                # but configured as requested. We fallback if needed)
-        self.model = genai.GenerativeModel(
-            model_name="models/gemini-1.5-pro",
-            generation_config={"response_mime_type": "application/json"}
+        self.model = gemini_client.GenerativeModel(
+            model_name=settings.GEMINI_REASONING_MODEL,
+            generation_config={"response_mime_type": "application/json"},
         )
 
     def _build_prompt(
         self, thesis_str: str, exchanges: List[str], sector_filter: Optional[str]
     ) -> str:
-        """Construct the extraction prompt for Gemini.
-
-        Forces the LLM to return exactly a JSON array of sub-hypotheses
-        with the requisite keys.
-        """
+        """Construct the extraction prompt for Gemini."""
         exchanges_str = ", ".join(exchanges)
         sector_str = sector_filter if sector_filter else "None (market-wide)"
 
@@ -103,11 +82,11 @@ class HypothesisEngine:
             "id": "A unique identifier (e.g., HYP-01)",
             "statement": "The exact predictive statement to test",
             "null_hypothesis": "The statistical null hypothesis equivalent",
-            "math_badge": "One primary mathematical method (e.g., 'Cointegration', 'GARCH', 'ARIMA')",
+            "math_badge": "One primary mathematical method",
             "direction": "long, short, or neutral",
-            "key_variables": ["List", "of", "required", "data", "series", "like", "Close", "Volume", "VIX"],
-            "relevant_math_models": ["List", "of", "models", "to", "apply"],
-            "geographic_scope": ["List", "of", "regions"],
+            "key_variables": ["Close", "Volume", "VIX"],
+            "relevant_math_models": ["GARCH", "ARIMA"],
+            "geographic_scope": ["US"],
             "asset_class": "Equities"
           }}
         ]
@@ -117,7 +96,8 @@ class HypothesisEngine:
         self,
         thesis_str: str,
         exchanges: List[str],
-        sector_filter: Optional[str]
+        sector_filter: Optional[str],
+        pulse: PulseEmitter,
     ) -> List[HypothesisObject]:
         """Decompose the thesis using Gemini and emit results.
 
@@ -125,26 +105,20 @@ class HypothesisEngine:
             thesis_str: The natural language investment thesis.
             exchanges: Target stock exchanges.
             sector_filter: Optional GICS sector limit.
+            pulse: PulseEmitter for streaming progress to the UI.
 
         Returns:
             A list of validated HypothesisObject instances.
-
-        Raises:
-            Exception: If Gemini fails or the JSON is malformed.
         """
-        logger.info("Agent 1: Decomposing thesis — session=%s", self.session_id)
+        logger.info("Agent 1: Decomposing thesis")
 
-        
-        
-        
-        # 1. Inform the user we are starting
-        await self.pulse.emit_status(
+        await pulse.emit_status(
             agent="hypothesis_engine",
             status="active",
             step=1,
             total=1,
             message_title="Decomposing Thesis",
-            message_subtitle="Querying Gemini 2.5 Pro for structural decomposition...",
+            message_subtitle="Querying Gemini for structural decomposition...",
             percent=10,
             estimated_remaining_sec=15,
         )
@@ -152,17 +126,9 @@ class HypothesisEngine:
         prompt = self._build_prompt(thesis_str, exchanges, sector_filter)
 
         try:
-                                                # 2. Call Gemini API
-                                                # Note: generate_content is synchronous in the SDK, so we run it async
-            import asyncio
             response = await asyncio.to_thread(self.model.generate_content, prompt)
 
-            
-            
-            
-            # 3. Parse output
             response_text = response.text.strip()
-                                                # Clean potential markdown if the model hallucinated backticks despite prompt
             if response_text.startswith("```json"):
                 response_text = response_text[7:]
             if response_text.endswith("```"):
@@ -172,31 +138,15 @@ class HypothesisEngine:
             if not isinstance(raw_hypotheses, list):
                 raise ValueError("Expected a JSON array from the LLM.")
 
-            
-            
-            
-            # Validate structural integrity via Pydantic
             validated_hypotheses = [HypothesisObject(**item) for item in raw_hypotheses]
 
-            logger.info(
-                "Agent 1: Extracted %d hypotheses — session=%s",
-                len(validated_hypotheses),
-                self.session_id,
-            )
+            logger.info("Agent 1: Extracted %d hypotheses", len(validated_hypotheses))
 
-            
-            
-            
-            # 4. Push results to UI sequentially
             for hyp in validated_hypotheses:
-                await self.pulse.emit_hypothesis_card(hyp.model_dump())
-                await asyncio.sleep(0.3)  # slight delay for UI staggered animation
+                await pulse.emit_hypothesis_card(hyp.model_dump())
+                await asyncio.sleep(0.3)
 
-            
-            
-            
-            # 5. Signal completion
-            await self.pulse.emit_status(
+            await pulse.emit_status(
                 agent="hypothesis_engine",
                 status="complete",
                 step=1,
@@ -211,8 +161,8 @@ class HypothesisEngine:
 
         except json.JSONDecodeError as exc:
             error_msg = f"Failed to parse JSON array from LLM: {str(exc)}"
-            logger.error("Agent 1 Error: %s. Output was: %s", error_msg, response.text)
-            await self.pulse.emit_error(
+            logger.error("Agent 1 Error: %s", error_msg)
+            await pulse.emit_error(
                 agent="hypothesis_engine",
                 error_message=error_msg,
                 recovery_action="The LLM returned malformed JSON. Try rephrasing the thesis.",
@@ -220,7 +170,7 @@ class HypothesisEngine:
             raise
         except Exception as exc:
             logger.error("Agent 1 Error: %s", str(exc), exc_info=True)
-            await self.pulse.emit_error(
+            await pulse.emit_error(
                 agent="hypothesis_engine",
                 error_message=str(exc),
                 recovery_action="Check Gemini API limits and try again.",

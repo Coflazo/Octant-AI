@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Logging configuration with JSON and console formatters."""
 
 import os
 import json
@@ -9,7 +6,7 @@ import logging
 import sys
 
 class JSONFormatter(logging.Formatter):
-    """outputs rigid json for elk/datadog ingests during docker execution lol"""
+    """Outputs rigid JSON for ELK/Datadog ingests during Docker execution."""
     def format(self, record):
         log_obj = {
             "timestamp": self.formatTime(record, self.datefmt),
@@ -24,13 +21,13 @@ class JSONFormatter(logging.Formatter):
         return json.dumps(log_obj)
 
 class ConsoleFormatter(logging.Formatter):
-    """outputs human readable format with contextual injection for development lol"""
+    """Outputs human-readable format with contextual injection for development."""
     def format(self, record):
         session_str = f" [{record.session_id}]" if hasattr(record, "session_id") else ""
         return f"{self.formatTime(record, self.datefmt)} | {record.levelname:<8} | {record.module}{session_str} : {record.getMessage()}"
 
 def get_logger(name: str) -> logging.Logger:
-    """retrieves the pre-configured logging interface lol"""
+    """Retrieve the pre-configured logging interface."""
     logger = logging.getLogger(name)
     
         

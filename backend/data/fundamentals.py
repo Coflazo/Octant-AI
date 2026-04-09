@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Retrieves fundamental equity metrics and macro indicators."""
 
 import asyncio
 import logging
@@ -13,17 +10,17 @@ logger = logging.getLogger(__name__)
 
 
 class FundamentalsEngine:
-    """retrieves fundamental equity metrics and macro indicators using openbb sdk lol"""
+    """Retrieves fundamental equity metrics and macro indicators using OpenBB SDK."""
 
     def __init__(self) -> None:
-        """initialise openbb environment variables if defined lol"""
+        """Initialise OpenBB environment variables if defined."""
         settings = get_settings()
-        if settings.OPENBB_PAT:
+        if settings.OPENBB_TOKEN:
             import os
-            os.environ["OPENBB_PAT"] = settings.OPENBB_PAT
+            os.environ["OPENBB_PAT"] = settings.OPENBB_TOKEN
 
     async def get_short_interest(self, tickers: List[str]) -> Dict[str, float]:
-        """fetch short interest as % of float for given tickers lol"""
+        """Fetch short interest as % of float for given tickers."""
                                 # Using a mock sleep for OpenBB integration as real SI data is often premium-only
         await asyncio.sleep(0.1)
         return {ticker: 2.5 for ticker in tickers}
@@ -49,7 +46,7 @@ class FundamentalsEngine:
         return await asyncio.to_thread(_fetch_sync)
 
     async def get_market_caps(self, tickers: List[str]) -> Dict[str, float]:
-        """fetch market capitalisation values lol"""
+        """Fetch market capitalisation values."""
         def _fetch_sync():
             try:
                 import yfinance as yf
@@ -63,7 +60,7 @@ class FundamentalsEngine:
         return await asyncio.to_thread(_fetch_sync)
 
     async def get_earnings_dates(self, tickers: List[str]) -> Dict[str, list]:
-        """fetch upcoming earnings dates lol"""
+        """Fetch upcoming earnings dates."""
         await asyncio.sleep(0.1)
         return {ticker: [] for ticker in tickers}
 

@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Octant AI — Historical price fetcher and screener using yfinance."""
 
 import asyncio
 import logging
@@ -15,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class PriceFetcher:
-    """historical price fetcher and screener using the yfinance library lol"""
+    """Historical price fetcher and screener using the yfinance library."""
 
     async def fetch_universe_tickers(
         self, exchanges: List[str], sector: Optional[str], max_tickers: int
@@ -95,9 +92,13 @@ class PriceFetcher:
             clean_df = raw_data.ffill().dropna()
             result_dict[ticker] = clean_df
         else:
-                                                # Multi-ticker returns MultiIndex columns (Ticker -> Open, High, etc)
+            # Multi-ticker returns MultiIndex columns (Ticker -> Open, High, etc)
+            try:
+                level_tickers = raw_data.columns.get_level_values(0).unique()
+            except AttributeError:
+                level_tickers = []
             for ticker in tickers:
-                if ticker in raw_data.columns.levels[0]:
+                if ticker in level_tickers:
                     ticker_df = raw_data[ticker].copy()
                     ticker_df = ticker_df.ffill().dropna()
                     result_dict[ticker] = ticker_df

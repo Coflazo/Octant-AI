@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Octant AI — ChromaDB persistent vector store for academic papers."""
 
 import logging
 from typing import List, Optional
@@ -13,10 +10,10 @@ logger = logging.getLogger(__name__)
 
 
 class ChromaStore:
-    """manages the persistent chromadb collection for academic papers lol"""
+    """Manage the persistent ChromaDB collection for academic papers."""
 
     def __init__(self) -> None:
-        """create or open the persistent valid chromadb collection lol"""
+        """Create or open the persistent ChromaDB collection."""
         settings = get_settings()
         
         try:

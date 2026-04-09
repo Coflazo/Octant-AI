@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Stochastic process models: OU, GBM, Merton jump-diffusion, Monte Carlo."""
 
 import logging
 from dataclasses import dataclass
@@ -46,7 +43,7 @@ class OUParams:
 # --- Fitting ---
 
 def fit_gbm(prices: pd.Series, dt: float = 1/252) -> Optional[GBMParams]:
-    """maximum likelihood estimation of gbm parameters from daily prices lol"""
+    """Maximum likelihood estimation of GBM parameters from daily prices."""
     if len(prices) < 2 or prices.iloc[-1] <= 0:
         return None
 
@@ -67,7 +64,7 @@ def fit_gbm(prices: pd.Series, dt: float = 1/252) -> Optional[GBMParams]:
         return None
 
 def fit_merton_jumps(returns: pd.Series, cond_vol: pd.Series, dt: float = 1/252) -> Optional[MertonParams]:
-    """identifies and models jumps based on a 3-sigma conditional volatility threshold lol"""
+    """Identify and model jumps based on a 3-sigma conditional volatility threshold."""
     df = pd.concat([returns, cond_vol], axis=1).dropna()
     if len(df) < 50:
         return None
@@ -162,7 +159,7 @@ def fit_ou_process(spread: pd.Series, dt: float = 1/252) -> Optional[OUParams]:
 # --- Simulation ---
 
 def simulate_gbm_paths(params: GBMParams, n_paths: int, n_steps: int, dt: float = 1/252) -> np.ndarray:
-    """generates an array of n_paths x n_steps standard gbm asset price paths lol"""
+    """Generate n_paths x n_steps standard GBM asset price paths."""
     try:
                                 # standard normal shocks
         Z = np.random.standard_normal((n_paths, n_steps))
@@ -189,7 +186,7 @@ def simulate_gbm_paths(params: GBMParams, n_paths: int, n_steps: int, dt: float 
 def simulate_merton_paths(
     merton: MertonParams, gbm: GBMParams, n_paths: int, n_steps: int, dt: float = 1/252
 ) -> np.ndarray:
-    """generates an array of paths under the merton jump-diffusion model lol"""
+    """Generate paths under the Merton jump-diffusion model."""
     try:
         Z = np.random.standard_normal((n_paths, n_steps))
         
@@ -228,7 +225,7 @@ def simulate_merton_paths(
         return np.zeros((0,0))
 
 def _nearest_pd(A: np.ndarray) -> np.ndarray:
-    """finds the nearest positive-definite matrix to input a (higham 1988) lol"""
+    """Find the nearest positive-definite matrix (Higham 1988)."""
     B = (A + A.T) / 2
     _, s, V = np.linalg.svd(B)
     H = np.dot(V.T, np.dot(np.diag(s), V))
@@ -252,7 +249,7 @@ def _nearest_pd(A: np.ndarray) -> np.ndarray:
     return A3
 
 def _is_pd(B: np.ndarray) -> bool:
-    """checks if a matrix is positive definite via cholesky decomposition lol"""
+    """Check if a matrix is positive definite via Cholesky decomposition."""
     try:
         np.linalg.cholesky(B)
         return True
@@ -262,7 +259,7 @@ def _is_pd(B: np.ndarray) -> bool:
 def compute_correlated_paths(
     cov_matrix: np.ndarray, means: np.ndarray, n_paths: int, n_steps: int, dt: float = 1/252
 ) -> np.ndarray:
-    """generates correlated multivariate random walks via cholesky decomposition lol"""
+    """Generate correlated multivariate random walks via Cholesky decomposition."""
     n_assets = len(means)
     
         

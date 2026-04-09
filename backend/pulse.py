@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""WebSocket connection management and PULSE event emission."""
 
 import asyncio
 import logging
@@ -27,7 +24,7 @@ class ConnectionManager:
     """
 
     def __init__(self) -> None:
-        """initialise empty connection and handler registries lol"""
+        """Initialise empty connection and handler registries."""
         self.active_connections: Dict[str, WebSocket] = {}
         self.audio_handlers: Dict[
             str, Callable[[bytes], Coroutine[Any, Any, None]]

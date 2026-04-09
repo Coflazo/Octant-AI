@@ -1,3 +1,4 @@
+import { PulseEvent } from '../../hooks/usePulseWebSocket';
 import PipelineView from './PipelineView';
 import HypothesisCards from './HypothesisCards';
 import CitationCards from './CitationCards';
@@ -5,7 +6,16 @@ import TickerGrid from './TickerGrid';
 import ResultsMatrix from './ResultsMatrix';
 import ActivityLog from './ActivityLog';
 
-export default function CenterPanel(props: any) {
+interface Props {
+  agentStatuses: Record<string, PulseEvent>;
+  hypotheses: Record<string, any>[];
+  citations: Record<string, any>[];
+  tickers: Record<string, any>[];
+  metricsMatrix: Record<string, any>[];
+  activityLog: PulseEvent[];
+}
+
+export default function CenterPanel(props: Props) {
   return (
     <div className="flex flex-col h-full overflow-y-auto p-6 gap-8 custom-scrollbar">
       <PipelineView statuses={props.agentStatuses} />

@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Octant AI — Modern Finance journal PDF scraper and parser."""
 
 import asyncio
 import logging
@@ -16,7 +13,7 @@ from backend.data.literature_sources import PaperObject
 logger = logging.getLogger(__name__)
 
 class ModernFinanceScraper:
-    """scrapes and parses pdf articles from the modern finance journal lol"""
+    """Scrape and parse PDF articles from the Modern Finance journal."""
 
     def __init__(self, gemini_client):
         self.gemini = gemini_client
@@ -104,7 +101,7 @@ class ModernFinanceScraper:
         return papers
 
     async def _gemini_extract(self, raw_text: str) -> PaperObject:
-        """run extracted pdf text through gemini flash lol"""
+        """Run extracted PDF text through Gemini Flash."""
         prompt = f"""
         Analyze this raw text extracted from a financial research PDF.
         Extract structured metadata as JSON:

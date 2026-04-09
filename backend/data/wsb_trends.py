@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Octant AI — WallStreetBets trend data interface."""
 
 import asyncio
 import json
@@ -14,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class WSBTrendsClient:
-    """interfaces with the external wsbtrends go binary lol"""
+    """Interface with the external WSBTrends Go binary."""
 
     def __init__(self) -> None:
         settings = get_settings()

@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""PDF compilation via pdflatex subprocess."""
 
 import asyncio
 import logging
@@ -11,11 +8,11 @@ from typing import Tuple
 logger = logging.getLogger(__name__)
 
 class LatexCompilationError(Exception):
-    """raised when pdflatex exits with a non-zero exit code due to latex syntax faults lol"""
+    """Raised when pdflatex exits with a non-zero exit code."""
     pass
 
 class PDFCompiler:
-    """manages the lifecycle of standard latex pdf generation lol"""
+    """Manage the lifecycle of LaTeX PDF generation."""
 
     def __init__(self):
                                 # Locate exact pdflatex path if necessary, but assume it's in global PATH for now

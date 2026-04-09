@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Octant AI — Time series models: ADF, ARIMA, GARCH family, HMM regimes, FFT, wavelets."""
 
 import logging
 from dataclasses import dataclass, field
@@ -80,7 +77,7 @@ class WaveletResult:
 # --- Time Series Models ---
 
 def run_adf_test(returns: pd.Series) -> Optional[ADFResult]:
-    """augmented dickey-fuller unit root test for stationarity lol"""
+    """Augmented Dickey-Fuller unit root test for stationarity."""
     if len(returns) < 30 or returns.std() == 0:
         logger.warning("run_adf_test: Series too short or zero variance.")
         return None
@@ -116,7 +113,7 @@ def run_adf_test(returns: pd.Series) -> Optional[ADFResult]:
         return None
 
 def fit_arima(returns: pd.Series) -> Optional[ARIMAResult]:
-    """grid searches arima(p,d,q) parameters to minimize aic lol"""
+    """Grid-search ARIMA(p,d,q) parameters to minimise AIC."""
     if len(returns) < 50 or returns.std() == 0:
         return None
 
@@ -146,7 +143,7 @@ def fit_arima(returns: pd.Series) -> Optional[ARIMAResult]:
                     best_aic = fit.aic
                     best_order = (p, 0, q)
                     best_model_fit = fit
-            except:
+            except Exception:
                 continue
 
     if best_model_fit is None:
@@ -161,7 +158,7 @@ def fit_arima(returns: pd.Series) -> Optional[ARIMAResult]:
     )
 
 def fit_garch_family(returns: pd.Series) -> Optional[GARCHFamilyResult]:
-    """fits garch(1,1), gjr-garch, and egarch; selects minimum bic lol"""
+    """Fit GARCH(1,1), GJR-GARCH, and EGARCH; select minimum BIC."""
     if len(returns) < 100 or returns.std() == 0:
         return None
 
@@ -183,7 +180,7 @@ def fit_garch_family(returns: pd.Series) -> Optional[GARCHFamilyResult]:
                 best_bic = fit.bic
                 best_fit = fit
                 best_name = name
-        except:
+        except Exception:
             continue
 
     if best_fit is None:
@@ -218,7 +215,7 @@ def fit_garch_family(returns: pd.Series) -> Optional[GARCHFamilyResult]:
     )
 
 def detect_vol_regimes(cond_vol: pd.Series) -> Optional[RegimeResult]:
-    """fits a 2-state gaussian hmm to conditional volatility lol"""
+    """Fit a 2-state Gaussian HMM to conditional volatility."""
     vol_clean = cond_vol.dropna().values.reshape(-1, 1)
     if len(vol_clean) < 100:
         return None
@@ -268,7 +265,7 @@ def detect_vol_regimes(cond_vol: pd.Series) -> Optional[RegimeResult]:
         return None
 
 def run_fft_analysis(returns: pd.Series) -> Optional[FFTResult]:
-    """performs fast fourier transform to find significant cyclical signals lol"""
+    """FFT analysis to identify significant cyclical signals."""
     ret_clean = returns.dropna().values
     N = len(ret_clean)
     if N < 50:
@@ -319,7 +316,7 @@ def run_fft_analysis(returns: pd.Series) -> Optional[FFTResult]:
         return None
 
 def run_wavelet_analysis(returns: pd.Series, sentiment: pd.Series) -> Optional[WaveletResult]:
-    """applies morlet continuous wavelet transform for coherence analysis lol"""
+    """Morlet continuous wavelet transform for coherence analysis."""
     df = pd.concat([returns, sentiment], axis=1).dropna()
     if len(df) < 50:
         return None

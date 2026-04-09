@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Octant AI — Multi-source academic literature search engine."""
 
 import asyncio
 import json
@@ -47,7 +44,7 @@ class PaperObject:
 
 
 class LiteratureEngine:
-    """queries academic sources and analyses abstracts with gemini flash lol"""
+    """Query academic sources and analyse abstracts with Gemini Flash."""
 
     def __init__(self) -> None:
         settings = get_settings()
@@ -59,7 +56,7 @@ class LiteratureEngine:
             logger.warning("GEMINI_API_KEY unconfigured.")
 
     async def search_all_sources(self, hypothesis: HypothesisObject, max_papers_per_source: int = 20) -> List[PaperObject]:
-        """orchestrate parallel queries to all academic sources lol"""
+        """Orchestrate parallel queries to all academic sources."""
         logger.info("Starting literature search for Hypothesis %s", hypothesis.id)
 
         
@@ -105,7 +102,7 @@ class LiteratureEngine:
         return unique_papers
 
     async def _search_arxiv(self, hypothesis: HypothesisObject, n: int) -> List[PaperObject]:
-        """query arxiv api for quantitative finance categories lol"""
+        """Query arXiv API for quantitative finance categories."""
         kw = hypothesis.math_badge.lower().replace(" ", "+")
         query = f"all:{kw}+AND+(cat:q-fin.ST+OR+cat:q-fin.PM+OR+cat:q-fin.TR+OR+cat:q-fin.MF+OR+cat:q-fin.RM)"
         url = f"http://export.arxiv.org/api/query?search_query={query}&start=0&max_results={n}&sortBy=relevance"
@@ -136,7 +133,7 @@ class LiteratureEngine:
         return papers
 
     async def _search_semantic_scholar(self, hypothesis: HypothesisObject, n: int) -> List[PaperObject]:
-        """query semantic scholar api lol"""
+        """Query Semantic Scholar API."""
         url = "https://api.semanticscholar.org/graph/v1/paper/search"
         query = f"{hypothesis.asset_class} {hypothesis.math_badge}"
         params = {
@@ -173,7 +170,7 @@ class LiteratureEngine:
         return papers
 
     async def _search_openalex(self, hypothesis: HypothesisObject, n: int) -> List[PaperObject]:
-        """query openalex works api lol"""
+        """Query OpenAlex works API."""
         search_query = urllib.parse.quote(hypothesis.math_badge)
         url = f"https://api.openalex.org/works?search={search_query}&sort=cited_by_count:desc&per-page={n}"
         papers = []
@@ -207,7 +204,7 @@ class LiteratureEngine:
         return papers
 
     async def _search_core(self, hypothesis: HypothesisObject, n: int) -> List[PaperObject]:
-        """query core api lol"""
+        """Query CORE API."""
         url = "https://api.core.ac.uk/v3/search/works"
         params = {"q": hypothesis.math_badge, "limit": n}
         settings = get_settings()
@@ -236,7 +233,7 @@ class LiteratureEngine:
         return papers
 
     async def _analyze_papers_with_gemini(self, papers: List[PaperObject], hypothesis: HypothesisObject) -> List[PaperObject]:
-        """batch papers and extract metrics via gemini flash lol"""
+        """Batch papers and extract metrics via Gemini Flash."""
         logger.info("Analysing %d papers with Gemini Flash for H-%s", len(papers), hypothesis.id)
         
         batch_size = 10

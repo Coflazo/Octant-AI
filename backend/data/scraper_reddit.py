@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Octant AI — Financial subreddit scraper for sentiment signal construction."""
 
 import asyncio
 import json
@@ -44,7 +41,7 @@ TICKER_RE = re.compile(r'\b([A-Z]{1,5})\b')
 
 
 class RedditScraper:
-    """scrapes financial subreddits for sentiment signal construction lol"""
+    """Scrape financial subreddits for sentiment signal construction."""
 
     def __init__(self, target_subreddits: Optional[List[str]] = None):
         self.subreddits = target_subreddits or [
@@ -56,7 +53,7 @@ class RedditScraper:
         self._load_tickers()
 
     def _load_tickers(self) -> None:
-        """loads a local json file of 3000+ us ticker symbols for regex matching lol"""
+        """Load a local JSON file of 3000+ US ticker symbols for regex matching."""
         db_path = Path("backend/data/tickers.json")
         if db_path.exists():
             try:
@@ -73,7 +70,7 @@ class RedditScraper:
             }
 
     def _extract_tickers(self, text: str) -> List[str]:
-        """find strictly uppercase words (1-5 letters) matching known tickers lol"""
+        """Find strictly uppercase words (1-5 letters) matching known tickers."""
         found = []
         for match in TICKER_RE.finditer(text):
             ticker = match.group(1)
@@ -82,7 +79,7 @@ class RedditScraper:
         return list(set(found))
 
     async def _random_delay(self) -> None:
-        """between page navigations: await asynciosleep(randomnormalvariate(5, 15)) clamped to [3, 8] seconds lol"""
+        """Random delay between page navigations, clamped to [3, 8] seconds."""
         delay = max(3.0, min(8.0, random.normalvariate(5.0, 1.5)))
         await asyncio.sleep(delay)
 

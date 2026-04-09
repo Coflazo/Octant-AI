@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Octant AI — SSRN abstract scraper via headless Playwright."""
 
 import asyncio
 import logging
@@ -14,7 +11,7 @@ from backend.data.literature_sources import PaperObject
 logger = logging.getLogger(__name__)
 
 class SSRNScraper:
-    """scrapes abstract pages from ssrn using headless playwright lol"""
+    """Scrape abstract pages from SSRN using headless Playwright."""
     
     async def search(self, hypothesis: HypothesisObject, n: int) -> List[PaperObject]:
         """Navigate SSRN and extract paper details.

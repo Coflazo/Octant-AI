@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Statistical hypothesis testing: t-tests, bootstrap, multiple comparison corrections."""
 
 import logging
 from dataclasses import dataclass
@@ -41,7 +38,7 @@ class BootstrapResult:
 # --- Core Algorithms ---
 
 def run_t_test(returns: pd.Series) -> TTestResult:
-    """computes basic one-sided and two-sided t-stats over strategy returns lol"""
+    """Compute one-sided and two-sided t-statistics over strategy returns."""
     rets = returns.dropna()
     N = len(rets)
     if N < 2 or rets.std() == 0:
@@ -64,7 +61,7 @@ def run_t_test(returns: pd.Series) -> TTestResult:
 
 
 def run_bootstrap_sharpe(returns: pd.Series, n_bootstrap: int = 10000) -> BootstrapResult:
-    """non-parametric block sampling with replacement to test sharpe distribution lol"""
+    """Non-parametric block bootstrap to test Sharpe ratio distribution."""
     rets = returns.dropna().values
     N = len(rets)
     if N < 30:
@@ -127,14 +124,14 @@ def run_bootstrap_sharpe(returns: pd.Series, n_bootstrap: int = 10000) -> Bootst
     )
 
 def apply_bonferroni(p_values: List[float], alpha: float = 0.05) -> List[bool]:
-    """strict family-wise error rate control lol"""
+    """Strict family-wise error rate control (Bonferroni)."""
     N = len(p_values)
     if N == 0: return []
     threshold = alpha / N
     return [p <= threshold for p in p_values]
 
 def apply_benjamini_hochberg(p_values: List[float], alpha: float = 0.05) -> List[bool]:
-    """false discovery rate (fdr) control via classical step-up procedure lol"""
+    """False discovery rate control via Benjamini-Hochberg step-up procedure."""
     N = len(p_values)
     if N == 0: return []
     
@@ -183,7 +180,7 @@ def compute_bayesian_adjusted_sharpe(sample_sharpe: float, n_periods: int, prior
     return float(post_mean)
 
 def label_significance(bonferroni_pass: bool, bh_pass: bool) -> str:
-    """helper to convert fwer and fdr indicators to string labels lol"""
+    """Convert FWER and FDR indicators to string labels."""
     if bonferroni_pass:
         return "strongly significant"
     elif bh_pass:

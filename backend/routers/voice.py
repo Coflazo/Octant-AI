@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Voice transcription WebSocket endpoint."""
 
 import asyncio
 import logging
@@ -9,7 +6,7 @@ import logging
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from backend.pulse import PulseEmitter
-from backend.routers.pipeline import _get_manager
+from backend.ws_manager import get_manager
 from backend.voice.reson8_client import Reson8Client
 
 logger = logging.getLogger(__name__)
@@ -32,7 +29,7 @@ async def voice_transcription_endpoint(websocket: WebSocket, session_id: str) ->
     await websocket.accept()
     logger.info("Voice transcription socket opened — session=%s", session_id)
 
-    manager = _get_manager()
+    manager = get_manager()
     pulse = PulseEmitter(session_id, manager)
     client = Reson8Client()
 
@@ -51,7 +48,7 @@ async def voice_transcription_endpoint(websocket: WebSocket, session_id: str) ->
     SILENCE_CHUNK_LIMIT = 8
 
     async def _audio_producer() -> None:
-        """read from websocket and enqueue for transmission lol"""
+        """Read from WebSocket and enqueue audio chunks for transmission."""
         nonlocal consecutive_silent_chunks
         try:
             while not finalise_event.is_set():
@@ -89,7 +86,7 @@ async def voice_transcription_endpoint(websocket: WebSocket, session_id: str) ->
             await audio_queue.put(b"")
 
     async def _audio_iterator():
-        """yield chunks from the queue for the streaming http request lol"""
+        """Yield audio chunks from the queue for the streaming HTTP request."""
         while True:
             chunk = await audio_queue.get()
             if not chunk:
@@ -97,7 +94,7 @@ async def voice_transcription_endpoint(websocket: WebSocket, session_id: str) ->
             yield chunk
 
     async def _transcription_consumer() -> None:
-        """call reson8 stream and push generated text back as pulse events lol"""
+        """Call Reson8 stream and push generated text back as PULSE events."""
         try:
             cumulative_text = []
 

@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Matplotlib figure generator for LaTeX report injection."""
 
 import logging
 import os
@@ -25,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class FigureGenerator:
-    """generates styled png visualisations for latex document injection lol"""
+    """Generate styled PNG visualisations for LaTeX document injection."""
 
     def __init__(self, output_dir: str = "/tmp/octant_reports/figures"):
         self.output_dir = output_dir
@@ -53,7 +50,7 @@ class FigureGenerator:
         })
 
     def _get_path(self, basename: str) -> str:
-        """returns physical file path with unique identifier lol"""
+        """Return physical file path with unique identifier."""
         return os.path.join(self.output_dir, f"{basename}_{uuid.uuid4().hex[:6]}.png")
 
     def equity_curve_figure(
@@ -64,7 +61,7 @@ class FigureGenerator:
         hypothesis_id: str, 
         stats_dict: dict
     ) -> str:
-        """cumulative log-return plot with shaded drawdowns and text annotation box lol"""
+        """Cumulative log-return plot with shaded drawdowns and annotation box."""
         fig, ax = plt.subplots(figsize=(10, 6))
         
         if strategy_returns.empty:
@@ -119,7 +116,7 @@ class FigureGenerator:
         return path
 
     def vol_surface_figure(self, vol_surface) -> str:
-        """matplotlib 3d surface mesh + flat heatmap as side-by-side subplots lol"""
+        """3D surface mesh and flat heatmap as side-by-side subplots."""
         from mpl_toolkits.mplot3d import Axes3D
         
         if vol_surface is None or vol_surface.implied_vols.empty:
@@ -176,7 +173,7 @@ class FigureGenerator:
         return path
 
     def return_distribution_figure(self, returns: pd.Series, hypothesis_id: str) -> str:
-        """histogram + fitted normal overlay + q-q plot side-by-side lol"""
+        """Histogram with fitted normal overlay and Q-Q plot side-by-side."""
         from scipy import stats
         
         df = returns.dropna()
@@ -225,7 +222,7 @@ class FigureGenerator:
         return path
 
     def correlation_clustermap_figure(self, return_matrix: pd.DataFrame) -> str:
-        """seaborn clustermap with diverging blue-white-red colormap lol"""
+        """Seaborn clustermap with diverging blue-white-red colormap."""
         df = return_matrix.dropna()
         if df.shape[1] < 2:
             return ""
@@ -254,7 +251,7 @@ class FigureGenerator:
         return path
 
     def rolling_sharpe_figure(self, rolling_alpha_result, hypothesis_id: str) -> str:
-        """rolling alpha with +/- 1 stdev ci band, dashed zero line lol"""
+        """Rolling alpha with +/- 1 stdev CI band and dashed zero line."""
         if rolling_alpha_result is None or rolling_alpha_result.alpha_series.empty:
             return ""
             
@@ -299,7 +296,7 @@ class FigureGenerator:
         return path
 
     def eigenvalue_spectrum_figure(self, pca_result) -> str:
-        """eigenvalue bar chart with marchenko-pastur boundary vertical line lol"""
+        """Eigenvalue bar chart with Marchenko-Pastur boundary."""
         if pca_result is None or len(pca_result.eigenvalues) == 0:
             return ""
             
@@ -325,7 +322,7 @@ class FigureGenerator:
         return path
 
     def sentiment_wavelet_figure(self, wavelet_result) -> str:
-        """coherence mock figure representing wavelet cross-spectrum analysis lol"""
+        """Wavelet cross-spectrum coherence figure."""
         if wavelet_result is None:
             return ""
             
@@ -354,7 +351,7 @@ class FigureGenerator:
         return path
 
     def factor_loading_heatmap(self, ff5_results: dict, hypotheses: list) -> str:
-        """hypothesis × factor heatmap lol"""
+        """Hypothesis x factor heatmap."""
         if not ff5_results:
             return ""
             

@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Cross-sectional analytics: Fama-French regressions, rolling alpha, PCA."""
 
 import logging
 from dataclasses import dataclass
@@ -58,7 +55,7 @@ class PCAResult:
 # --- Functions ---
 
 def run_ff5_regression(strategy_returns: pd.Series, ff5_factors: pd.DataFrame) -> Optional[FF5RegressionResult]:
-    """runs ols ff5 regression with newey-west hac standard errors lol"""
+    """Run OLS FF5 regression with Newey-West HAC standard errors."""
     try:
                                 # Align dates
         df = pd.concat([strategy_returns, ff5_factors], axis=1).dropna()
@@ -98,7 +95,7 @@ def run_ff5_regression(strategy_returns: pd.Series, ff5_factors: pd.DataFrame) -
         return None
 
 def run_rolling_alpha(strategy_returns: pd.Series, ff5_factors: pd.DataFrame, window_months: int = 12) -> Optional[RollingAlphaResult]:
-    """computes rolling alpha via 12-month rolling ols regressions lol"""
+    """Compute rolling alpha via 12-month rolling OLS regressions."""
     window_days = window_months * 21
     df = pd.concat([strategy_returns, ff5_factors], axis=1).dropna()
     
@@ -198,7 +195,7 @@ def detect_marchenko_pastur_noise(eigenvalues: np.ndarray, n_assets: int, n_peri
 
 
 def run_pca(return_matrix: pd.DataFrame) -> Optional[PCAResult]:
-    """runs sklearn pca and isolates meaningful factors using marchenko-pastur lol"""
+    """Run PCA and isolate meaningful factors using Marchenko-Pastur."""
     df = return_matrix.dropna()
     N = df.shape[1]
     T = df.shape[0]
