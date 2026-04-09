@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Pipeline orchestrator — coordinates the 5-agent directed acyclic graph."""
 
 import asyncio
 import logging
@@ -10,7 +7,8 @@ from typing import Dict, List, Optional, Tuple
 
 import google.generativeai as genai
 
-from backend.config import GEMINI_API_KEY
+from backend.config import get_settings
+from backend.exceptions import PipelineStoppedError
 from backend.pulse import PulseEmitter
 from backend.session_manager import session_manager
 from backend.agents.hypothesis_engine import HypothesisEngine
@@ -22,13 +20,10 @@ from backend.math_engine.performance import PerformanceReport
 
 logger = logging.getLogger(__name__)
 
-genai.configure(api_key=GEMINI_API_KEY)
+settings = get_settings()
+if settings.GEMINI_API_KEY:
+    genai.configure(api_key=settings.GEMINI_API_KEY)
 gemini_client = genai
-
-
-class PipelineStoppedError(Exception):
-    """raised natively when a frontend cancellation kills the session pipeline lol"""
-    pass
 
 
 @dataclass
@@ -43,105 +38,120 @@ class PipelineRequest:
 @dataclass
 class PipelineResult:
     pdf_path: str
-    hypotheses: List[any]
-    citations_db: Dict[str, List[any]]
-    results_manifest: Dict[str, PerformanceReport]
-    universe_result: any
+    hypotheses: list
+    citations_db: dict
+    results_manifest: dict
+    universe_result: object
 
 
 class OctantOrchestrator:
-    """master pipeline coordinator enforcing the 5-agent directed acyclic graph lol"""
+    """Master pipeline coordinator enforcing the 5-agent DAG."""
 
     def __init__(self):
-                                # Initialise agents passing down the global injected Gemini resource
         self.hypothesis_engine = HypothesisEngine(gemini_client)
         self.literature_agent = LiteratureAgent(gemini_client)
-        self.universe_builder = UniverseBuilder()
+        self.universe_builder = UniverseBuilder(gemini_client)
         self.backtesting_agent = BacktestingAgent()
         self.report_architect = ReportArchitect(gemini_client)
 
     async def _check_stop(self, session_id: str):
-        """raises a hard kill signal if the frontend interrupted the process lol"""
+        """Raise PipelineStoppedError if the frontend cancelled this session."""
         state = await session_manager.get(session_id)
         if state and state.stop_flag.is_set():
             logger.warning("Pipeline halt intercepted for session %s.", session_id)
             raise PipelineStoppedError("Orchestration interrupted by user.")
 
-    async def run_pipeline(self, request: PipelineRequest, pulse: PulseEmitter) -> PipelineResult:
-        """the core quantitative pipeline routing logic lol"""
+    async def run_pipeline(
+        self, request: PipelineRequest, pulse: PulseEmitter
+    ) -> PipelineResult:
+        """Execute the full 5-agent quantitative pipeline."""
         session_id = request.session_id
-        
-        try:
-                                                # 1. Start Phase
-            await self._check_stop(session_id)
-            await pulse.emit_status("orchestrator", "active", 1, 5, "Initializing", "Kicking off 5-node pipeline...")
 
-            
-            
-            
-            # 2. Agent 1 -> Hypothesis Engine
+        try:
+            # 1. Start
             await self._check_stop(session_id)
-            hypotheses = await self.hypothesis_engine.generate(request.thesis, pulse)
+            await pulse.emit_status(
+                "orchestrator", "active", 1, 5,
+                "Initializing", "Starting 5-node pipeline...",
+            )
+
+            # 2. Agent 1 — Hypothesis Engine
+            await self._check_stop(session_id)
+            hypotheses = await self.hypothesis_engine.decompose(
+                thesis_str=request.thesis,
+                exchanges=request.exchanges,
+                sector_filter=request.sector,
+                pulse=pulse,
+            )
             await session_manager.update(session_id, hypotheses=hypotheses)
 
-            
-            
-            
-            # 3. Agents 2 & 3 -> Concurrent Literature and Universe Builder
+            # 3. Agents 2 & 3 — Concurrent Literature + Universe
             await self._check_stop(session_id)
-            await pulse.emit_status("orchestrator", "active", 2, 5, "Concurrent Research", "Spinning up Agent 2 (Literature) & Agent 3 (Universe)")
-            
-                        
-                        
-                        
-            # Using asyncio.gather for parallel fork-join semantics per spec
+            await pulse.emit_status(
+                "orchestrator", "active", 2, 5,
+                "Concurrent Research",
+                "Agent 2 (Literature) & Agent 3 (Universe) running in parallel",
+            )
+
             literature_task = asyncio.create_task(
                 self.literature_agent.research(hypotheses, pulse)
             )
             universe_task = asyncio.create_task(
-                self.universe_builder.build(hypotheses, request.exchanges, request.sector, request.time_range, pulse)
+                self.universe_builder.build(
+                    hypotheses, request.exchanges,
+                    request.sector, request.time_range, pulse,
+                )
             )
-            
-            citations_db, universe_result = await asyncio.gather(literature_task, universe_task)
-            
-                        
-                        
-                        
-            # 4. Agent 4 -> Backtesting Engine
+
+            citations_db, universe_result = await asyncio.gather(
+                literature_task, universe_task
+            )
+
+            # 4. Agent 4 — Backtesting
             await self._check_stop(session_id)
-            results_manifest = await self.backtesting_agent.run(universe_result, hypotheses, citations_db, pulse)
+            results_manifest = await self.backtesting_agent.run(
+                universe_result, hypotheses, citations_db, pulse
+            )
             await session_manager.update(session_id, results_manifest=results_manifest)
 
-            
-            
-            
-            # 5. Agent 5 -> Report Architect
+            # 5. Agent 5 — Report Architect
             await self._check_stop(session_id)
-            pdf_path = await self.report_architect.generate(hypotheses, citations_db, results_manifest, pulse)
-            await session_manager.update(session_id, pdf_path=pdf_path, status="complete")
-            
-                        
-                        
-                        
-            # Final Success pulse
-            await pulse.emit_status("orchestrator", "complete", 5, 5, "Success", "Pipeline finished execution.")
+            pdf_path = await self.report_architect.generate(
+                hypotheses, citations_db, results_manifest, pulse
+            )
+            await session_manager.update(
+                session_id, pdf_path=pdf_path, status="complete"
+            )
+
+            # Final success
+            await pulse.emit_status(
+                "orchestrator", "complete", 5, 5,
+                "Success", "Pipeline finished.",
+            )
 
             return PipelineResult(
                 pdf_path=pdf_path,
                 hypotheses=hypotheses,
                 citations_db=citations_db,
                 results_manifest=results_manifest,
-                universe_result=universe_result
+                universe_result=universe_result,
             )
 
         except PipelineStoppedError as e:
-            logger.info("Pipeline %s exited early: %s", session_id, str(e))
-            await pulse.emit_status("orchestrator", "error", 0, 0, "Aborted", "User killed the test string.")
+            logger.info("Pipeline %s stopped: %s", session_id, e)
+            await pulse.emit_status(
+                "orchestrator", "error", 0, 0, "Aborted", "Pipeline stopped by user."
+            )
             await session_manager.update(session_id, status="stopped")
             raise
-            
+
         except Exception as e:
-            logger.error("Terminal exception in Orchestrator for %s: %s", session_id, e, exc_info=True)
-            await pulse.emit_status("orchestrator", "error", 0, 0, "Catastrophic Failure", f"Uncaught exception: {str(e)}")
+            logger.error(
+                "Pipeline error for %s: %s", session_id, e, exc_info=True
+            )
+            await pulse.emit_status(
+                "orchestrator", "error", 0, 0,
+                "Pipeline Error", f"Uncaught exception: {str(e)}",
+            )
             await session_manager.update(session_id, status="error")
-            raise e
+            raise

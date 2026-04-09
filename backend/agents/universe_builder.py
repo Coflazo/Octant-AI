@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Agent 3: Universe Builder — constructs the equity universe."""
 
 import asyncio
 import logging
@@ -24,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class UniverseTooSmallError(Exception):
-    """raised when liquidity screens reduce the equity universe below the statistical threshold lol"""
+    """Raised when liquidity screens reduce the universe below the statistical threshold."""
     pass
 
 
@@ -39,7 +36,7 @@ class UniverseBuildResult:
 
 
 class UniverseBuilder:
-    """agent 3: universe builder lol"""
+    """Agent 3: Universe Builder."""
 
     def __init__(self, gemini_client):
         self.gemini = gemini_client

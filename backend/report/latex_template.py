@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""LaTeX template builder for IMRAD-format research reports."""
 
 import logging
 from typing import Dict, List
@@ -14,14 +11,14 @@ logger = logging.getLogger(__name__)
 
 
 class LaTeXAssembler:
-    """compounds text, tables, and images into a strict tex source string lol"""
+    """Compound text, tables, and images into a TeX source string."""
 
     def __init__(self):
         self.header_color = "1B3D6E" # OctNavy
         self.accent_color = "00C07A" # OctGreen
 
     def _latex_escape(self, s: str) -> str:
-        """sanitizes text strings for safe latex compilation lol"""
+        """Sanitise text strings for safe LaTeX compilation."""
         if s is None:
             return ""
         s = str(s)
@@ -45,7 +42,7 @@ class LaTeXAssembler:
         gemini_narratives: Dict[str, str],
         bibtex_content: str
     ) -> str:
-        """injects python variables into the rigid imrad latex preamble and body lol"""
+        """Inject variables into the IMRAD LaTeX preamble and body."""
 
         
         
@@ -164,7 +161,7 @@ class LaTeXAssembler:
         return "\n".join(latex)
 
     def _build_performance_table(self, results_manifest: Dict[str, PerformanceReport], hypotheses: List[HypothesisObject]) -> List[str]:
-        """creates a booktabs formatted latex table with key stats lol"""
+        """Create a booktabs-formatted LaTeX table with key statistics."""
         latex = [
             "\\begin{table}[h!]",
             "\\centering",
@@ -202,7 +199,7 @@ class LaTeXAssembler:
         return latex
 
     def _build_appendices(self, hypotheses: List[HypothesisObject], results_manifest: Dict[str, PerformanceReport]) -> List[str]:
-        """adds statistical appendices including ff5 factors and marchenko-pastur lol"""
+        """Add statistical appendices including FF5 factors and Marchenko-Pastur."""
         return [
             "\\newpage",
             "\\appendix",

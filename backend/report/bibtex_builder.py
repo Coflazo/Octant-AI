@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""BibTeX citation builder for academic paper references."""
 
 import re
 from typing import List
@@ -9,7 +6,7 @@ from typing import List
 from backend.data.literature_sources import PaperObject
 
 def _clean_authors(raw_authors: str) -> str:
-    """removes html tags and handles 'et al' conversions for bibtex 'and' syntax lol"""
+    """Remove HTML tags and handle 'et al' conversions for BibTeX 'and' syntax."""
                 # Strip HTML
     clean = re.sub('<[^<]+?>', '', raw_authors)
     
@@ -33,7 +30,7 @@ def _clean_authors(raw_authors: str) -> str:
     return clean if clean else "Unknown Author"
 
 def _clean_bibtex_value(val: str) -> str:
-    """escapes problematic characters for bibtex compilation lol"""
+    """Escape problematic characters for BibTeX compilation."""
     v = str(val).replace("&", "\\&").replace("%", "\\%").replace("$", "\\$")
     v = v.replace("#", "\\#").replace("_", "\\_").replace("{", "\\{").replace("}", "\\}")
     return v

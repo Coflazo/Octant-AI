@@ -1,28 +1,18 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Octant AI — FastAPI application entry point."""
 
 import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from fastapi import FastAPI
-from backend.health import router as health_router, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from backend.config import get_settings
-from backend.pulse import ConnectionManager
+from backend.health import router as health_router
+from backend.ws_manager import manager
 
 logger = logging.getLogger(__name__)
-
-
-
-
-# ── Global singleton connection manager ──────────────────────────────────
-
-manager = ConnectionManager()
 
 
 
@@ -127,6 +117,7 @@ from backend.routers.reports import router as reports_router
 app.include_router(pipeline_router, prefix="/api/pipeline", tags=["Pipeline"])
 app.include_router(voice_router, prefix="/api/voice", tags=["Voice"])
 app.include_router(reports_router, prefix="/api/reports", tags=["Reports"])
+app.include_router(health_router, tags=["Health"])
 
 
 

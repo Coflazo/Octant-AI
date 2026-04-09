@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Sentiment signal construction from WSB mentions and Reddit text."""
 
 import asyncio
 import json
@@ -28,7 +25,7 @@ class SentimentSignal:
 
 
 class SentimentSignalConstructor:
-    """pipelines raw wsb mentions and reddit text into standardised signals lol"""
+    """Pipeline raw WSB mentions and Reddit text into standardised signals."""
 
     async def build_signal(
         self,

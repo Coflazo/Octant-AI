@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Options pricing: Black-Scholes, Greeks, implied volatility, skew analytics."""
 
 import logging
 from dataclasses import dataclass, field
@@ -22,7 +19,7 @@ class VolSurface:
 
 
 def _d1_d2(S: float, K: float, r: float, T: float, sigma: float) -> tuple[float, float]:
-    """helper to compute probability factors d1 and d2 lol"""
+    """Compute probability factors d1 and d2."""
     if T <= 0 or sigma <= 0 or K <= 0 or S <= 0:
         return 0.0, 0.0
     d1 = (np.log(S / K) + (r + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
@@ -30,14 +27,14 @@ def _d1_d2(S: float, K: float, r: float, T: float, sigma: float) -> tuple[float,
     return d1, d2
 
 def black_scholes_call(S: float, K: float, r: float, T: float, sigma: float) -> float:
-    """prices a european call option lol"""
+    """Price a European call option."""
     if T <= 0:
         return max(0.0, S - K)
     d1, d2 = _d1_d2(S, K, r, T, sigma)
     return S * norm.cdf(d1) - K * np.exp(-r * T) * norm.cdf(d2)
 
 def black_scholes_put(S: float, K: float, r: float, T: float, sigma: float) -> float:
-    """prices a european put option via put-call parity lol"""
+    """Price a European put option via put-call parity."""
     if T <= 0:
         return max(0.0, K - S)
     d1, d2 = _d1_d2(S, K, r, T, sigma)
@@ -80,7 +77,7 @@ def bs_rho(S: float, K: float, r: float, T: float, sigma: float, option_type: st
     return -K * T * np.exp(-r * T) * norm.cdf(-d2)
 
 def implied_vol(market_price: float, S: float, K: float, r: float, T: float, option_type: str) -> float:
-    """finds the implied volatility using brent's method lol"""
+    """Find implied volatility using Brent's method."""
     if T <= 0 or market_price <= 0:
         return 0.0
         
@@ -149,7 +146,7 @@ def build_vol_surface(options_chain: pd.DataFrame) -> Optional[VolSurface]:
         return None
 
 def compute_risk_reversal_25(vol_surface: VolSurface) -> float:
-    """rr(25) = iv(25δ call) - iv(25δ put) lol"""
+    """RR(25) = IV(25d call) - IV(25d put)."""
                 # Mocking delta extraction purely from VolSurface grid.
     if vol_surface is None or vol_surface.implied_vols.empty:
         return 0.0
@@ -172,7 +169,7 @@ def compute_risk_reversal_25(vol_surface: VolSurface) -> float:
     return float(call_str["implied_vol"].mean() - put_str["implied_vol"].mean())
 
 def compute_vol_term_structure_slope(vol_surface: VolSurface) -> float:
-    """(iv_3m - iv_1m)/iv_1m lol"""
+    """Term structure slope: (IV_3m - IV_1m) / IV_1m."""
     if vol_surface is None or len(vol_surface.term_structure) < 2:
         return 0.0
         

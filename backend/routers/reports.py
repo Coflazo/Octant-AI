@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""REST endpoints for listing and downloading generated PDF reports."""
 
 import logging
 import os

@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Octant AI — Fama-French five-factor data retrieval."""
 
 import asyncio
 import logging

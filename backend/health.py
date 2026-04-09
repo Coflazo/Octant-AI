@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Health check endpoint and dependency status monitoring."""
 
 from fastapi import APIRouter
 import time
@@ -12,7 +9,7 @@ import shutil
 router = APIRouter()
 
 async def check_dependencies():
-    """concurrently sweeps external and local states lol"""
+    """Concurrently sweep external and local dependency states."""
     checks = []
     
         
@@ -55,7 +52,7 @@ async def check_dependencies():
 
 @router.get("/health")
 async def health_check():
-    """main routing heartbeat lol"""
+    """Main routing heartbeat."""
     checks = await check_dependencies()
     
     system_status = "ok"

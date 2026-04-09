@@ -8,7 +8,7 @@ export default function TickerGrid({ tickers }: { tickers: any[] }) {
             <span className="text-[9px] bg-gray-800 px-1.5 py-0.5 rounded text-gray-400">{t.exchange}</span>
           </div>
           <div className="text-[10px] text-gray-500 mb-1 z-10">{t.sector}</div>
-          <div className="text-[10px] text-gray-500 z-10">Cap: ${(t.market_cap / 1e9).toFixed(1)}B</div>
+          <div className="text-[10px] text-gray-500 z-10">Cap: ${(t.mktcap / 1e9).toFixed(1)}B</div>
           
           {t.sparkline_url && (
             <img src={t.sparkline_url} className="absolute bottom-0 left-0 w-full h-1/2 object-cover opacity-30 group-hover:opacity-60 transition-opacity" alt={`${t.symbol} sparkline`} />

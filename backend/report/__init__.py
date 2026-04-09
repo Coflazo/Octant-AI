@@ -1,1 +1,1 @@
-"""octant ai — report generation: latex templates, matplotlib figures, pdf compilation lol"""
+"""Octant AI — Report generation: LaTeX templates, matplotlib figures, PDF compilation."""

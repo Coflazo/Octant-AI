@@ -2,7 +2,15 @@ import ReportOutline from './ReportOutline';
 import DownloadPDF from './DownloadPDF';
 import TopMetrics from './TopMetrics';
 
-export default function RightPanel(props: any) {
+interface Props {
+  reportOutline: Record<string, any>[];
+  pdfUrl: string | null;
+  metricsMatrix: Record<string, any>[];
+  citations: Record<string, any>[];
+  hypotheses: Record<string, any>[];
+}
+
+export default function RightPanel(props: Props) {
   return (
     <div className="border-l border-gray-800 p-4 flex flex-col gap-6 overflow-y-auto bg-[#0C0D11] custom-scrollbar">
       <h2 className="text-sm font-semibold uppercase tracking-widest text-gray-500 mb-2">Report Synthesizer</h2>

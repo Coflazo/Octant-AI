@@ -1,4 +1,4 @@
-export default function ResultsMatrix({ metrics }: { metrics: any[] }) {
+export default function ResultsMatrix({ metrics }: { metrics: Record<string, any>[] }) {
   if (!metrics || metrics.length === 0) return null;
 
   return (
@@ -14,12 +14,13 @@ export default function ResultsMatrix({ metrics }: { metrics: any[] }) {
         </thead>
         <tbody className="divide-y divide-gray-800">
           {metrics.map((m, i) => {
-            const hasEdge = m.sharpe > 1.0;
+            const sharpe = m.sharpe_ratio ?? 0;
+            const hasEdge = sharpe > 1.0;
             return (
-              <tr key={i} className={`hover:bg-gray-800/50 transition-colors ${hasEdge ? 'bg-octGreen/5' : ''}`}>
+              <tr key={m.hypothesis_id || i} className={`hover:bg-gray-800/50 transition-colors ${hasEdge ? 'bg-oct-green/5' : ''}`}>
                 <td className="p-2 text-xs text-gray-300 font-medium truncate max-w-[200px]" title={m.title}>{m.title}</td>
-                <td className={`p-2 text-xs text-right font-mono ${m.cagr > 0 ? 'text-octGreen' : 'text-red-400'}`}>{(m.cagr * 100).toFixed(1)}%</td>
-                <td className={`p-2 text-xs text-right font-mono ${hasEdge ? 'text-octGreen font-bold' : 'text-gray-400'}`}>{m.sharpe.toFixed(2)}</td>
+                <td className={`p-2 text-xs text-right font-mono ${m.cagr > 0 ? 'text-oct-green' : 'text-red-400'}`}>{(m.cagr * 100).toFixed(1)}%</td>
+                <td className={`p-2 text-xs text-right font-mono ${hasEdge ? 'text-oct-green font-bold' : 'text-gray-400'}`}>{sharpe.toFixed(2)}</td>
                 <td className="p-2 text-xs text-right font-mono text-red-400/80">{(m.max_drawdown * 100).toFixed(1)}%</td>
               </tr>
             );

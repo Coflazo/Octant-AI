@@ -1,1 +1,1 @@
-"""octant ai — fastapi route handlers lol"""
+"""Octant AI — FastAPI route handlers."""

@@ -1,7 +1,4 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Interfaces with fal.ai to generate sparkline chart images."""
 
 import asyncio
 import logging
@@ -14,16 +11,16 @@ logger = logging.getLogger(__name__)
 
 
 class FalChartClient:
-    """interfaces with falai to generate high-fidelity sparkline images lol"""
+    """Interfaces with fal.ai to generate high-fidelity sparkline images."""
 
     def __init__(self) -> None:
-        """initialise fal ai credentials lol"""
+        """Initialise fal.ai credentials from settings."""
         settings = get_settings()
-        self.api_key = settings.FAL_KEY
+        self.api_key = settings.FAL_API_KEY
         if self.api_key:
             os.environ["FAL_KEY"] = self.api_key
         else:
-            logger.warning("FAL_KEY is not configured. Sparklines will not render.")
+            logger.warning("FAL_API_KEY is not configured. Sparklines will not render.")
 
     async def generate_sparkline(
         self, symbol: str, price_series: List[float], width: int = 120, height: int = 40

@@ -1,10 +1,7 @@
-"""
-Octant AI module
-writing this part was tricky ngl, just gluing things together atm
-"""
+"""Custom exception hierarchy for the Octant AI pipeline."""
 
 class OctantBaseError(Exception):
-    """root application exception conveying recovery context lol"""
+    """Root application exception conveying recovery context."""
     def __init__(self, message: str, recovery_action: str = "Contact support or restart the pipeline."):
         super().__init__(message)
         self.recovery_action = recovery_action
