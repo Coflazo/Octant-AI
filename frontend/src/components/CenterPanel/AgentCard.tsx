@@ -1,4 +1,4 @@
-import { PulseEvent } from '../../hooks/usePulseWebSocket';
+import type { PulseEvent } from '../../hooks/usePulseWebSocket';
 
 interface AgentDef {
   id: string;

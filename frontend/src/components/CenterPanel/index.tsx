@@ -1,4 +1,4 @@
-import { PulseEvent } from '../../hooks/usePulseWebSocket';
+import type { PulseEvent } from '../../hooks/usePulseWebSocket';
 import PipelineView from './PipelineView';
 import HypothesisCards from './HypothesisCards';
 import CitationCards from './CitationCards';

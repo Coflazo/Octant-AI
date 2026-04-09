@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { PulseEvent } from '../../hooks/usePulseWebSocket';
+import type { PulseEvent } from '../../hooks/usePulseWebSocket';
 
 export default function ActivityLog({ logs }: { logs: PulseEvent[] }) {
   const bottomRef = useRef<HTMLDivElement>(null);
