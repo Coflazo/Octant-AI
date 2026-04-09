@@ -9,17 +9,17 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Application-wide configuration loaded from environment variables.
 
-    Every external API key, file path, and tuneable parameter for the entire
-    Octant AI pipeline is centralised in this single class. The .env file is
-    the canonical source; this class validates types and provides defaults.
-
     Attributes:
-        GEMINI_API_KEY: Google Gemini API key for LLM calls (reasoning + throughput).
-        RESON8_API_KEY: Reson8 speech-to-text API key from console.reson8.dev.
-        FAL_API_KEY: fal.ai API key for chart image generation.
-        DUST_API_KEY: Dust.tt API key for agent workflow orchestration.
-        OPENBB_TOKEN: OpenBB SDK personal access token for fundamentals data.
+        LLM_PROVIDER: Provider selection (auto/groq/gemini/ollama/anthropic).
+        GROQ_API_KEY: Groq API key for free-tier LLM access.
+        GEMINI_API_KEY: Google Gemini API key for free-tier LLM access.
+        ANTHROPIC_API_KEY: Anthropic API key for paid Claude access.
+        OLLAMA_BASE_URL: Base URL for local Ollama instance.
+        OLLAMA_MODEL: Ollama model name for LLM inference.
         CORE_API_KEY: CORE API key for academic full-text search (optional).
+        EMBEDDING_PROVIDER: Embedding provider (auto/sentence-transformers/ollama).
+        EMBEDDING_MODEL: Model name override for embeddings.
+        HUMANIZE_REPORTS: Enable AI-pattern detection and rewrite on reports.
         CHROMA_DB_PATH: Local filesystem path for ChromaDB persistent storage.
         REPORTS_OUTPUT_PATH: Directory where compiled PDF reports are written.
         LATEX_TEMPLATES_PATH: Directory containing LaTeX .tex template files.
@@ -30,11 +30,6 @@ class Settings(BaseSettings):
         MAX_UNIVERSE_SIZE: Maximum number of tickers in the equity universe.
         BACKTEST_DEFAULT_PERIOD_YEARS: Default lookback period for backtests.
         MONTE_CARLO_PATHS: Number of Monte Carlo simulation paths to generate.
-        GEMINI_REASONING_MODEL: Gemini model name for reasoning tasks.
-        GEMINI_FLASH_MODEL: Gemini model name for high-throughput extraction.
-        GEMINI_EMBEDDING_MODEL: Gemini model name for text embeddings.
-        RESON8_BASE_URL: Base URL for the Reson8 API.
-        FAL_BASE_URL: Base URL for the fal.ai API.
         HOST: Uvicorn host binding address.
         PORT: Uvicorn port number.
     """
@@ -46,63 +41,43 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    
-    
-    
-    # ── API Keys ───────────────────────────────────────────────────────────
+    # ── LLM Provider ──────────────────────────────────────────────────────
+    LLM_PROVIDER: str = "auto"
+    GROQ_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
-    RESON8_API_KEY: str = ""
-    FAL_API_KEY: str = ""
-    DUST_API_KEY: str = ""
-    OPENBB_TOKEN: str = ""
+    ANTHROPIC_API_KEY: str = ""
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OLLAMA_MODEL: str = "llama3.2"
+
+    # ── Embedding Provider ────────────────────────────────────────────────
+    EMBEDDING_PROVIDER: str = "auto"
+    EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
+
+    # ── API Keys (optional) ──────────────────────────────────────────────
     CORE_API_KEY: Optional[str] = None
 
-    
-    
-    
+    # ── Report Settings ──────────────────────────────────────────────────
+    HUMANIZE_REPORTS: bool = True
+
     # ── File Paths ─────────────────────────────────────────────────────────
     CHROMA_DB_PATH: str = "./data/chromadb"
     REPORTS_OUTPUT_PATH: str = "./reports"
     LATEX_TEMPLATES_PATH: str = "./latex_templates"
     WSBT_BINARY_PATH: str = "./bin/wsbt"
 
-    
-    
-    
     # ── Logging ────────────────────────────────────────────────────────────
     LOG_LEVEL: str = "INFO"
 
-    
-    
-    
     # ── Server ─────────────────────────────────────────────────────────────
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
     REDIS_URL: Optional[str] = None
     HOST: str = "0.0.0.0"
     PORT: int = 8000
 
-    
-    
-    
     # ── Pipeline Tuneables ─────────────────────────────────────────────────
     MAX_UNIVERSE_SIZE: int = 200
     BACKTEST_DEFAULT_PERIOD_YEARS: int = 10
     MONTE_CARLO_PATHS: int = 50000
-
-    
-    
-    
-    # ── Model Names ────────────────────────────────────────────────────────
-    GEMINI_REASONING_MODEL: str = "gemini-2.5-pro-preview-05-06"
-    GEMINI_FLASH_MODEL: str = "gemini-2.0-flash"
-    GEMINI_EMBEDDING_MODEL: str = "models/text-embedding-004"
-
-    
-    
-    
-    # ── External Service URLs ──────────────────────────────────────────────
-    RESON8_BASE_URL: str = "https://api.reson8.dev"
-    FAL_BASE_URL: str = "https://api.fal.ai"
 
     @property
     def cors_origin_list(self) -> List[str]:

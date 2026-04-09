@@ -12,8 +12,14 @@ httpx==0.28.1
 websockets==14.2
 python-multipart==0.0.20
 
-# ── Google Gemini LLM ──────────────────────────────────────
+# ── LLM Providers ──────────────────────────────────────────
+groq>=0.4.0
+anthropic>=0.40.0
+ollama>=0.4.0
 google-generativeai==0.8.4
+
+# ── Embeddings ──────────────────────────────────────────────
+sentence-transformers>=2.2.0
 
 # ── Financial Data ─────────────────────────────────────────
 yfinance==0.2.51
@@ -44,9 +50,6 @@ playwright==1.49.1
 beautifulsoup4==4.12.3
 feedparser==6.0.11
 PyMuPDF==1.25.3
-
-# ── Image Generation (fal.ai) ─────────────────────────────
-fal-client==0.5.9
 
 # ── Report Generation ─────────────────────────────────────
 Jinja2==3.1.5

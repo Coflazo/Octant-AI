@@ -13,11 +13,14 @@ services:
       - ./data:/app/data
       - ./reports:/tmp/octant_reports
     environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-auto}
+      - GROQ_API_KEY=${GROQ_API_KEY}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - RESON8_API_KEY=${RESON8_API_KEY}
-      - FAL_API_KEY=${FAL_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+      - HUMANIZE_REPORTS=${HUMANIZE_REPORTS:-true}
       - LOG_LEVEL=DEBUG
-      - LOG_FORMAT=pretty
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -26,7 +29,7 @@ services:
       retries: 3
 
   frontend:
-    image: node:18-alpine
+    image: node:20-alpine
     container_name: octant_frontend
     working_dir: /app
     ports:

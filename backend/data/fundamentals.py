@@ -4,20 +4,14 @@ import asyncio
 import logging
 from typing import Dict, List
 
-from backend.config import get_settings
-
 logger = logging.getLogger(__name__)
 
 
 class FundamentalsEngine:
-    """Retrieves fundamental equity metrics and macro indicators using OpenBB SDK."""
+    """Retrieves fundamental equity metrics and macro indicators using yfinance."""
 
     def __init__(self) -> None:
-        """Initialise OpenBB environment variables if defined."""
-        settings = get_settings()
-        if settings.OPENBB_TOKEN:
-            import os
-            os.environ["OPENBB_PAT"] = settings.OPENBB_TOKEN
+        pass
 
     async def get_short_interest(self, tickers: List[str]) -> Dict[str, float]:
         """Fetch short interest as % of float for given tickers."""

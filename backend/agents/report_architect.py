@@ -4,10 +4,9 @@ import asyncio
 import logging
 import os
 import uuid
-from typing import Dict, List
+from typing import Dict, List, TYPE_CHECKING
 
 import numpy as np
-import google.generativeai as genai
 
 from backend.agents.hypothesis_engine import HypothesisObject
 from backend.config import get_settings
@@ -15,9 +14,13 @@ from backend.data.literature_sources import PaperObject
 from backend.math_engine.performance import PerformanceReport
 from backend.pulse import PulseEmitter
 from backend.report.figure_generator import FigureGenerator
+from backend.report.humanizer import ReportHumanizer
 from backend.report.latex_template import LaTeXAssembler
 from backend.report.pdf_compiler import PDFCompiler, LatexCompilationError
 from backend.report.bibtex_builder import build_bibtex_entries
+
+if TYPE_CHECKING:
+    from backend.llm_provider import LLMProvider
 
 logger = logging.getLogger(__name__)
 
@@ -25,14 +28,16 @@ logger = logging.getLogger(__name__)
 class ReportArchitect:
     """Agent 5: Streams NLP narratives and orchestrates LaTeX compilation."""
 
-    def __init__(self, gemini_client):
-        self.gemini = gemini_client
+    def __init__(self, llm_provider: "LLMProvider"):
+        self.llm = llm_provider
         self.fig_gen = FigureGenerator()
         self.latex_asm = LaTeXAssembler()
         self.pdf_comp = PDFCompiler()
+        self.humanizer = ReportHumanizer(llm_provider)
 
         settings = get_settings()
         self.output_dir = settings.REPORTS_OUTPUT_PATH
+        self.humanize = settings.HUMANIZE_REPORTS
         os.makedirs(self.output_dir, exist_ok=True)
 
     async def generate(
@@ -47,7 +52,7 @@ class ReportArchitect:
 
         await pulse.emit_status(
             "report", "active", 0, 7,
-            "Synthesising Narratives", "Agent 5 calling Gemini...",
+            "Synthesising Narratives", "Agent 5 generating sections...",
             0, 180,
         )
 
@@ -79,20 +84,18 @@ class ReportArchitect:
             all_papers.extend(p_list)
         bibtex_content = build_bibtex_entries(all_papers)
 
-        # 3. Stream Narrative Sections
+        # 3. Stream Narrative Sections (IMRAD structure)
         sections = [
-            ("Abstract", "High-level summary of the entire thesis, models used, and core finding."),
-            ("1_Introduction", "Introduce the market anomaly. Describe fundamental drivers."),
-            ("2_Literature_Review", "Compare the papers extracted. Discuss prior Bayes Sharpe indicators."),
-            ("3_Methodology", "Detail the time-series econometrics or Factor Regressions applied."),
-            ("4_Results", "Compare cumulative returns, drawdown stability, and statistical significance."),
-            ("5_Discussion", "Discuss transaction cost sensitivity and execution latency bottlenecks."),
-            ("6_Conclusions", "Direct ruling: should the fund deploy capital into this strategy?"),
+            ("Abstract", "High-level summary of the entire thesis, models used, and core finding. State the conclusion upfront."),
+            ("1_Introduction", "Use SCR narrative: Situation (market context), Complication (the anomaly/gap), Resolution (this study's approach). Action title: state the finding, not the topic."),
+            ("2_Literature_Review", "Synthesize the extracted papers into a coherent narrative. Group by methodology, identify gaps. Each paragraph should advance a claim with evidence."),
+            ("3_Methodology", "Detail the time-series econometrics or Factor Regressions applied. Be precise about model specifications, estimation windows, and robustness checks."),
+            ("4_Results", "Compare cumulative returns, drawdown stability, and statistical significance. Lead each paragraph with the key finding (action title principle). One insight per paragraph."),
+            ("5_Discussion", "Discuss transaction cost sensitivity, execution latency, and limitations. Acknowledge what the evidence does NOT support."),
+            ("6_Conclusions", "Direct ruling: should the fund deploy capital? Summarize effect sizes, confidence levels, and recommended position sizing."),
         ]
 
         gemini_narratives = {}
-        settings = get_settings()
-        model = self.gemini.GenerativeModel(settings.GEMINI_REASONING_MODEL)
 
         # Build context from hypotheses and results
         thesis_text = hypotheses[0].statement if hypotheses else "Unknown"
@@ -109,10 +112,17 @@ class ReportArchitect:
 
         for idx, (sec_id, directive) in enumerate(sections):
             prompt = (
-                f"You are a Senior Quantitative Researcher writing an academic paper.\n"
-                f"Strategy Context: {context}\n"
+                f"You are a Senior Quantitative Researcher writing an IMRAD-structured academic paper.\n\n"
+                f"WRITING GUIDELINES:\n"
+                f"- Use precise, technical language. Avoid hedging and filler words.\n"
+                f"- Each paragraph must advance one clear claim supported by evidence.\n"
+                f"- Use action titles: section headings state findings, not topics.\n"
+                f"- Apply the ghost outline test: headings alone should tell the complete story.\n"
+                f"- Cite specific numbers: effect sizes, p-values, confidence intervals.\n"
+                f"- Write in active voice. Be direct and authoritative.\n\n"
+                f"Strategy Context:\n{context}\n"
                 f"Write the '{sec_id}' section. {directive}\n"
-                f"Format output as pure text. Provide 2-3 paragraphs."
+                f"Format output as pure text. Provide 2-3 substantive paragraphs."
             )
 
             await pulse.emit_status(
@@ -122,16 +132,15 @@ class ReportArchitect:
             )
 
             try:
-                response = await asyncio.to_thread(
-                    model.generate_content, prompt
-                )
-                text = response.text
+                text = await self.llm.generate(prompt)
+                if self.humanize:
+                    text = await self.humanizer.humanize(text)
                 gemini_narratives[sec_id] = text
                 await pulse.emit_report_section(
                     section_name=sec_id, excerpt=text, is_complete=True
                 )
             except Exception as e:
-                logger.error("Gemini narrative failed for %s: %s", sec_id, e)
+                logger.error("LLM narrative failed for %s: %s", sec_id, e)
                 gemini_narratives[sec_id] = f"{sec_id} generation failed."
 
         # 4. Assemble LaTeX

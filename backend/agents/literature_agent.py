@@ -3,9 +3,7 @@
 import asyncio
 import difflib
 import logging
-from typing import Dict, List
-
-import google.generativeai as genai
+from typing import Dict, List, TYPE_CHECKING
 
 from backend.agents.hypothesis_engine import HypothesisObject
 from backend.pulse import PulseEmitter
@@ -14,18 +12,21 @@ from backend.data.scraper_ssrn import SSRNScraper
 from backend.data.modern_finance_scraper import ModernFinanceScraper
 from backend.data.chroma_store import ChromaStore
 
+if TYPE_CHECKING:
+    from backend.llm_provider import LLMProvider, EmbeddingProvider
+
 logger = logging.getLogger(__name__)
 
 
 class LiteratureAgent:
     """Agent 2: Academic literature researcher."""
 
-    def __init__(self, gemini_client):
-        self.gemini = gemini_client
-        self.literature_engine = LiteratureEngine()
+    def __init__(self, llm_provider: "LLMProvider", embedding_provider: "EmbeddingProvider"):
+        self.llm = llm_provider
+        self.literature_engine = LiteratureEngine(llm_provider)
         self.ssrn_scraper = SSRNScraper()
-        self.mf_scraper = ModernFinanceScraper(gemini_client)
-        self.chroma_store = ChromaStore()
+        self.mf_scraper = ModernFinanceScraper(llm_provider)
+        self.chroma_store = ChromaStore(embedding_provider)
 
     def _build_queries(self, hypothesis: HypothesisObject) -> List[str]:
         """Generate 5-8 search queries mixing domain keywords and math terms."""
@@ -151,7 +152,7 @@ class LiteratureAgent:
 
             unique_papers = self._deduplicate(all_raw_papers)
 
-            # NLP Extraction via Gemini
+            # NLP Extraction via LLM
             if unique_papers:
                 analyzed_papers = await self.literature_engine._analyze_papers_with_gemini(
                     unique_papers, hyp

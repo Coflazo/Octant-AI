@@ -5,13 +5,15 @@ import json
 import logging
 import urllib.parse
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 
 import httpx
-import google.generativeai as genai
 
 from backend.agents.hypothesis_engine import HypothesisObject
 from backend.config import get_settings
+
+if TYPE_CHECKING:
+    from backend.llm_provider import LLMProvider
 
 logger = logging.getLogger(__name__)
 
@@ -44,16 +46,10 @@ class PaperObject:
 
 
 class LiteratureEngine:
-    """Query academic sources and analyse abstracts with Gemini Flash."""
+    """Query academic sources and analyse abstracts with LLM."""
 
-    def __init__(self) -> None:
-        settings = get_settings()
-        if settings.GEMINI_API_KEY:
-            genai.configure(api_key=settings.GEMINI_API_KEY)
-            self.model = genai.GenerativeModel("models/gemini-1.5-flash", generation_config={"response_mime_type": "application/json"})
-        else:
-            self.model = None
-            logger.warning("GEMINI_API_KEY unconfigured.")
+    def __init__(self, llm_provider: "LLMProvider" = None) -> None:
+        self.llm = llm_provider
 
     async def search_all_sources(self, hypothesis: HypothesisObject, max_papers_per_source: int = 20) -> List[PaperObject]:
         """Orchestrate parallel queries to all academic sources."""
@@ -95,8 +91,8 @@ class LiteratureEngine:
                 
                 
                 
-        # Analyze papers with Gemini Flash in batches
-        if unique_papers and self.model:
+        # Analyze papers with LLM in batches
+        if unique_papers and self.llm:
             unique_papers = await self._analyze_papers_with_gemini(unique_papers, hypothesis)
 
         return unique_papers
@@ -233,29 +229,29 @@ class LiteratureEngine:
         return papers
 
     async def _analyze_papers_with_gemini(self, papers: List[PaperObject], hypothesis: HypothesisObject) -> List[PaperObject]:
-        """Batch papers and extract metrics via Gemini Flash."""
-        logger.info("Analysing %d papers with Gemini Flash for H-%s", len(papers), hypothesis.id)
-        
+        """Batch papers and extract metrics via LLM."""
+        logger.info("Analysing %d papers with LLM for H-%s", len(papers), hypothesis.id)
+
         batch_size = 10
         for i in range(0, len(papers), batch_size):
             batch = papers[i:i + batch_size]
-            
+
             prompt = f"""
             Analyze these {len(batch)} paper abstracts against this HYPOTHESIS: "{hypothesis.statement}".
-            
+
             Extract structured data. Return exactly a JSON array of objects (one per input paper, preserving order). Each object must have:
             "key_finding" (str), "signal_tested" (str), "market_studied" (str), "time_period" (str),
             "performance_metric" (str), "statistical_methodology" (str), "effect_size" (float or null),
             "supports_hypothesis" (boolean or null), "novelty_score" (int 0-100)
-            
+
             PAPERS:
             """
             for j, p in enumerate(batch):
                 prompt += f"\\nPAPER {j}: Title: {p.title}\\nAbstract: {p.abstract[:800]}\\n"
-                
+
             try:
-                response = await asyncio.to_thread(self.model.generate_content, prompt)
-                txt = response.text.replace("```json", "").replace("```", "").strip()
+                txt = await self.llm.generate(prompt, json_mode=True)
+                txt = txt.replace("```json", "").replace("```", "").strip()
                 data = json.loads(txt)
                 
                 if len(data) == len(batch):
@@ -270,6 +266,6 @@ class LiteratureEngine:
                         batch[j].supports_hypothesis = metrics.get("supports_hypothesis", None)
                         batch[j].novelty_score = metrics.get("novelty_score", 0)
             except Exception as exc:
-                logger.error("Gemini batch extraction failed: %s", exc)
+                logger.error("LLM batch extraction failed: %s", exc)
                 
         return papers

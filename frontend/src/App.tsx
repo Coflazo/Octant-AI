@@ -75,11 +75,6 @@ export default function App() {
           return [...existing, latest.payload];
         });
         break;
-      case 'transcription_complete':
-        if (latest.payload.is_final) {
-          setThesis(prev => (prev + " " + latest.payload.text).trim());
-        }
-        break;
     }
   }, [events]);
 
@@ -130,7 +125,7 @@ export default function App() {
           />
           <h1 className="text-xl font-bold tracking-tight">
             Octant AI
-            <span className="text-gray-500 font-light text-sm ml-2">v0.1.0-alpha</span>
+            <span className="text-gray-500 font-light text-sm ml-2">v0.2.0</span>
           </h1>
         </div>
         <div className="flex items-center gap-2 text-sm text-gray-400">

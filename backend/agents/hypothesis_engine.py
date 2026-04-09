@@ -3,13 +3,15 @@
 import asyncio
 import json
 import logging
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 
-import google.generativeai as genai
 from pydantic import BaseModel, Field
 
 from backend.config import get_settings
 from backend.pulse import PulseEmitter
+
+if TYPE_CHECKING:
+    from backend.llm_provider import LLMProvider
 
 logger = logging.getLogger(__name__)
 
@@ -42,18 +44,13 @@ class HypothesisObject(BaseModel):
 class HypothesisEngine:
     """Agent 1: Decomposes unstructured theses into testable components."""
 
-    def __init__(self, gemini_client) -> None:
-        """Initialise the Hypothesis Engine with the Gemini client.
+    def __init__(self, llm_provider: "LLMProvider") -> None:
+        """Initialise the Hypothesis Engine with an LLM provider.
 
         Args:
-            gemini_client: The configured google.generativeai module.
+            llm_provider: An LLM provider implementing the generate() protocol.
         """
-        self.gemini = gemini_client
-        settings = get_settings()
-        self.model = gemini_client.GenerativeModel(
-            model_name=settings.GEMINI_REASONING_MODEL,
-            generation_config={"response_mime_type": "application/json"},
-        )
+        self.llm = llm_provider
 
     def _build_prompt(
         self, thesis_str: str, exchanges: List[str], sector_filter: Optional[str]
@@ -118,7 +115,7 @@ class HypothesisEngine:
             step=1,
             total=1,
             message_title="Decomposing Thesis",
-            message_subtitle="Querying Gemini for structural decomposition...",
+            message_subtitle="Querying LLM for structural decomposition...",
             percent=10,
             estimated_remaining_sec=15,
         )
@@ -126,9 +123,9 @@ class HypothesisEngine:
         prompt = self._build_prompt(thesis_str, exchanges, sector_filter)
 
         try:
-            response = await asyncio.to_thread(self.model.generate_content, prompt)
+            response_text = await self.llm.generate(prompt, json_mode=True)
 
-            response_text = response.text.strip()
+            response_text = response_text.strip()
             if response_text.startswith("```json"):
                 response_text = response_text[7:]
             if response_text.endswith("```"):
@@ -173,6 +170,6 @@ class HypothesisEngine:
             await pulse.emit_error(
                 agent="hypothesis_engine",
                 error_message=str(exc),
-                recovery_action="Check Gemini API limits and try again.",
+                recovery_action="Check LLM API limits and try again.",
             )
             raise

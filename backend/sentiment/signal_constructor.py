@@ -31,13 +31,13 @@ class SentimentSignalConstructor:
         self,
         wsbt_counts: Dict[str, int],
         reddit_posts: List[RedditPost],
-        gemini_client
+        llm_provider
     ) -> Dict[str, SentimentSignal]:
         """Constructs sentiment signals per ticker.
 
         Executes the 5-Step Pipeline:
         1: Relative mention normalisation
-        2: Upvote-weighted directional scoring via Gemini
+        2: Upvote-weighted directional scoring via LLM
         3: Options flow override
         4: EWMA smoothing (span=5)
         5: Z-score standardisation
@@ -78,7 +78,6 @@ class SentimentSignalConstructor:
             
             
             # STEP 2 & 3: Upvote-weighted directional score & Options flow override
-                                                # We use Gemini to rate the posts
             raw_scores = []
             catalysts = set()
             convictions = []
@@ -100,8 +99,8 @@ class SentimentSignalConstructor:
                     "position_type": "shares", "calls", or "puts".
                     """
                     try:
-                        resp = await asyncio.to_thread(gemini_client.generate_content, prompt)
-                        txt = resp.text.replace("```json", "").replace("```", "").strip()
+                        txt = await llm_provider.generate(prompt, json_mode=True)
+                        txt = txt.replace("```json", "").replace("```", "").strip()
                         data = json.loads(txt)
                         
                                                 
@@ -125,7 +124,7 @@ class SentimentSignalConstructor:
                         convictions.append(float(data.get("conviction_level", 0.5)))
                         
                     except Exception as e:
-                        logger.debug("Gemini extraction failed for post %s: %s", post.title, e)
+                        logger.debug("LLM extraction failed for post %s: %s", post.title, e)
 
             
             
