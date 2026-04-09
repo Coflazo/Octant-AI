@@ -11,10 +11,7 @@ router = APIRouter()
 async def check_dependencies():
     """Concurrently sweep external and local dependency states."""
     checks = []
-    
-        
-        
-        
+
     # pdflatex check
     t0 = time.time()
     pdf_bin = shutil.which("pdflatex")
@@ -23,38 +20,28 @@ async def check_dependencies():
         "status": "ok" if pdf_bin else "down",
         "latency_ms": round((time.time() - t0) * 1000, 2)
     })
-    
-        
-        
-        
-    # Dummy async check for APIs (Mocking external ping)
+
+    # LLM Provider check
     t0 = time.time()
-    await asyncio.sleep(0.01) # Simulating socket bind
+    await asyncio.sleep(0.01)
+    has_llm = any([
+        os.environ.get("GROQ_API_KEY"),
+        os.environ.get("GEMINI_API_KEY"),
+        os.environ.get("ANTHROPIC_API_KEY"),
+    ])
     checks.append({
-        "service": "Gemini API (Google AI Studio)",
-        "status": "ok" if os.environ.get("GEMINI_API_KEY") else "degraded",
+        "service": "LLM Provider",
+        "status": "ok" if has_llm else "degraded",
         "latency_ms": round((time.time() - t0) * 1000, 2)
     })
 
-    checks.append({
-        "service": "Reson8 Micro-Service",
-        "status": "ok" if os.environ.get("RESON8_API_KEY") else "degraded",
-        "latency_ms": 0.0
-    })
-
-    checks.append({
-        "service": "Fal.ai Models",
-        "status": "ok",
-        "latency_ms": 14.2
-    })
-    
     return checks
 
 @router.get("/health")
 async def health_check():
     """Main routing heartbeat."""
     checks = await check_dependencies()
-    
+
     system_status = "ok"
     if any(c["status"] == "down" for c in checks):
         system_status = "down"
@@ -63,7 +50,7 @@ async def health_check():
 
     return {
         "status": system_status,
-        "version": "0.1.0-alpha",
-        "uptime": "N/A", 
+        "version": "0.2.0",
+        "uptime": "N/A",
         "checks": checks
     }

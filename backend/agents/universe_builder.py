@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 
 import pandas as pd
 
@@ -11,11 +11,14 @@ from backend.agents.hypothesis_engine import HypothesisObject
 from backend.pulse import PulseEmitter
 from backend.data.price_fetcher import PriceFetcher
 from backend.data.fundamentals import FundamentalsEngine
-from backend.data.fal_client import FalChartClient
+from backend.data.sparkline_generator import SparklineGenerator
 from backend.data.wsb_trends import WSBTrendsClient
 from backend.data.scraper_reddit import RedditScraper
 from backend.sentiment.signal_constructor import SentimentSignalConstructor, SentimentSignal
 from backend.data.ff5_factors import fetch_ff5_factors
+
+if TYPE_CHECKING:
+    from backend.llm_provider import LLMProvider
 
 logger = logging.getLogger(__name__)
 
@@ -38,11 +41,11 @@ class UniverseBuildResult:
 class UniverseBuilder:
     """Agent 3: Universe Builder."""
 
-    def __init__(self, gemini_client):
-        self.gemini = gemini_client
+    def __init__(self, llm_provider: "LLMProvider"):
+        self.llm = llm_provider
         self.price_fetcher = PriceFetcher()
         self.fundamentals = FundamentalsEngine()
-        self.fal_client = FalChartClient()
+        self.sparkline_gen = SparklineGenerator()
         self.wsbt_client = WSBTrendsClient()
         self.reddit_scraper = RedditScraper()
         self.sentiment_constructor = SentimentSignalConstructor()
@@ -139,7 +142,7 @@ class UniverseBuilder:
         
         
         # 7. Fetch Fundamentals
-        await pulse.emit_status("universe", "active", 5, 10, "Pulling Fundamentals", "Retrieving metrics via OpenBB", 50, 70)
+        await pulse.emit_status("universe", "active", 5, 10, "Pulling Fundamentals", "Retrieving metrics via yfinance", 50, 70)
         
         fundamentals_tasks = asyncio.gather(
             self.fundamentals.get_short_interest(surviving_tickers),
@@ -159,16 +162,16 @@ class UniverseBuilder:
         
         
         
-        # 8. Emit ticker_card PULSE events (with fal.ai fallback) -> Concurrency!
-        await pulse.emit_status("universe", "active", 6, 10, "Rendering Ticker Cards", "Calling fal.ai flux-pro", 60, 50)
-        
+        # 8. Emit ticker_card PULSE events with sparklines
+        await pulse.emit_status("universe", "active", 6, 10, "Rendering Ticker Cards", "Generating sparklines", 60, 50)
+
         async def _emit_ticker(ticker: str):
             df = clean_prices[ticker]
             close_prices = df["Close"].dropna().tail(30).tolist() if "Close" in df.columns else []
-            
+
             spark_url = ""
             if close_prices:
-                spark_url = await self.fal_client.generate_sparkline(ticker, close_prices)
+                spark_url = await self.sparkline_gen.generate_sparkline(ticker, close_prices)
                 
             await pulse.emit_ticker_card({
                 "symbol": ticker,
@@ -200,11 +203,11 @@ class UniverseBuilder:
         
         
         # 10. Build sentiment signals
-        await pulse.emit_status("universe", "active", 8, 10, "Constructing Sentiment Signals", "Gemini 2.5 NLP Extraction", 80, 20)
+        await pulse.emit_status("universe", "active", 8, 10, "Constructing Sentiment Signals", "LLM NLP Extraction", 80, 20)
         sentiment_signals = await self.sentiment_constructor.build_signal(
             wsbt_counts=wsbt_counts,
             reddit_posts=reddit_posts,
-            gemini_client=self.gemini
+            llm_provider=self.llm
         )
 
         

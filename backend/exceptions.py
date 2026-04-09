@@ -35,13 +35,3 @@ class LatexCompilationError(OctantBaseError):
 class PipelineStoppedError(OctantBaseError):
     def __init__(self, message="The underlying orchestrator task was deliberately cancelled."):
         super().__init__(message, recovery_action="None required. Wait for the engine to spin down completely.")
-
-
-class Reson8TranscriptionError(OctantBaseError):
-    def __init__(self, message="Binary voice chunks could not be reconciled by Reson8."):
-        super().__init__(message, recovery_action="Check local microphone settings and ensure chunks are valid raw formats.")
-
-
-class FalAPIError(OctantBaseError):
-    def __init__(self, message="The fal.ai sparkline generative endpoint timed out."):
-        super().__init__(message, recovery_action="Degraded state active. Sparklines will not be rendered on universe cards.")

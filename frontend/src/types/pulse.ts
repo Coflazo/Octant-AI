@@ -38,8 +38,6 @@ export type PayloadType =
   | "ticker_card"
   | "metric_result"
   | "report_section"
-  | "transcription"
-  | "transcription_complete"
   | "error";
 
 
@@ -217,16 +215,6 @@ export interface ReportSection {
 
 
 
-// ── Transcription Payload ───────────────────────────────────────────────
-
-export interface TranscriptionPayload {
-  text: string;
-  is_final: boolean;
-}
-
-
-
-
 // ── Error Payload ───────────────────────────────────────────────────────
 
 export interface ErrorPayload {
@@ -247,9 +235,8 @@ export type PulsePayload =
   | TickerCard
   | MetricResult
   | ReportSection
-  | TranscriptionPayload
   | ErrorPayload
-  | Record<string, unknown>; // fallback for "status" events with freeform data
+  | Record<string, unknown>;
 
 
 

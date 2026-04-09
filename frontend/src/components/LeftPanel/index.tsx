@@ -1,4 +1,3 @@
-import VoiceInput from './VoiceInput';
 import ThesisInput from './ThesisInput';
 import ExchangeSelector from './ExchangeSelector';
 import TimeRange from './TimeRange';
@@ -19,7 +18,6 @@ export default function LeftPanel(props: Props) {
   return (
     <div className="border-r border-gray-800 p-4 flex flex-col gap-6 overflow-y-auto bg-[#0C0D11]">
       <h2 className="text-sm font-semibold uppercase tracking-widest text-gray-500 mb-2">Research Configuration</h2>
-      <VoiceInput sessionId={props.sessionId} />
       <ThesisInput thesis={props.thesis} setThesis={props.setThesis} />
       <ExchangeSelector exchanges={props.exchanges} setExchanges={props.setExchanges} />
       <TimeRange dateRange={props.dateRange} setDateRange={props.setDateRange} />

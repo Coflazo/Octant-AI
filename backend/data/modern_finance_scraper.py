@@ -3,22 +3,23 @@
 import asyncio
 import logging
 import random
-from typing import List
-
-import google.generativeai as genai
+from typing import List, TYPE_CHECKING
 
 from backend.config import get_settings
 from backend.data.literature_sources import PaperObject
+
+if TYPE_CHECKING:
+    from backend.llm_provider import LLMProvider
 
 logger = logging.getLogger(__name__)
 
 class ModernFinanceScraper:
     """Scrape and parse PDF articles from the Modern Finance journal."""
 
-    def __init__(self, gemini_client):
-        self.gemini = gemini_client
+    def __init__(self, llm_provider: "LLMProvider"):
+        self.llm = llm_provider
         self.download_dir = "/tmp/octant_pdfs"
-        
+
         import os
         os.makedirs(self.download_dir, exist_ok=True)
 
@@ -101,19 +102,19 @@ class ModernFinanceScraper:
         return papers
 
     async def _gemini_extract(self, raw_text: str) -> PaperObject:
-        """Run extracted PDF text through Gemini Flash."""
+        """Run extracted PDF text through LLM."""
         prompt = f"""
         Analyze this raw text extracted from a financial research PDF.
         Extract structured metadata as JSON:
         "title", "authors", "year", "abstract", "key_finding", "statistical_methodology"
-        
+
         PDF TEXT EXCERPT:
         {raw_text[:2000]}
         """
         try:
             import json
-            response = await asyncio.to_thread(self.gemini.generate_content, prompt)
-            txt = response.text.replace("```json", "").replace("```", "").strip()
+            txt = await self.llm.generate(prompt, json_mode=True)
+            txt = txt.replace("```json", "").replace("```", "").strip()
             data = json.loads(txt)
             
             return PaperObject(
@@ -127,7 +128,7 @@ class ModernFinanceScraper:
                 full_text=raw_text
             )
         except Exception as e:
-            logger.error("Gemini failed to extract PDF fields: %s", e)
+            logger.error("LLM failed to extract PDF fields: %s", e)
             return PaperObject(
                 title="Unknown PDF Title",
                 authors="Unknown",

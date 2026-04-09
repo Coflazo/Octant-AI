@@ -105,17 +105,24 @@ if os.path.isdir(settings.REPORTS_OUTPUT_PATH):
         name="reports",
     )
 
+# Mount sparkline images directory
+sparkline_dir = "/tmp/octant_reports/sparklines"
+os.makedirs(sparkline_dir, exist_ok=True)
+app.mount(
+    "/static/sparklines",
+    StaticFiles(directory=sparkline_dir),
+    name="sparklines",
+)
+
 
 
 
 # ── Register API routers ────────────────────────────────────────────────
 
 from backend.routers.pipeline import router as pipeline_router
-from backend.routers.voice import router as voice_router
 from backend.routers.reports import router as reports_router
 
 app.include_router(pipeline_router, prefix="/api/pipeline", tags=["Pipeline"])
-app.include_router(voice_router, prefix="/api/voice", tags=["Voice"])
 app.include_router(reports_router, prefix="/api/reports", tags=["Reports"])
 app.include_router(health_router, tags=["Health"])
 
@@ -132,12 +139,6 @@ app.include_router(health_router, tags=["Health"])
 async def websocket_endpoint(websocket: WebSocket, session_id: str) -> None:
     """Accept a WebSocket connection and register it for PULSE event delivery.
 
-    The connection is held open for the duration of the pipeline run. All
-    PULSE events (status updates, hypothesis cards, citation cards, ticker
-    cards, metric results, report sections) are pushed through this socket.
-    Binary audio chunks from the Reson8 voice input flow upstream through
-    the same connection.
-
     Args:
         websocket: The incoming WebSocket connection.
         session_id: Unique session identifier for this pipeline run.
@@ -147,25 +148,11 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str) -> None:
 
     try:
         while True:
-                                                # Keep the connection alive and receive any client messages
-                                                # (e.g., binary audio chunks for voice transcription, control messages)
             data = await websocket.receive()
 
             if "text" in data:
-                                                                # Text messages are control commands (e.g., stop, restart)
                 text = data["text"]
                 logger.debug("WebSocket text received — session=%s, msg=%s", session_id, text[:100])
-
-            elif "bytes" in data:
-                                                                # Binary messages are audio chunks for Reson8 transcription
-                audio_chunk = data["bytes"]
-                logger.debug(
-                    "WebSocket audio chunk received — session=%s, bytes=%d",
-                    session_id,
-                    len(audio_chunk),
-                )
-                                                                # Audio processing is handled by the voice router subscription
-                await manager.handle_audio_chunk(session_id, audio_chunk)
 
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected — session_id=%s", session_id)

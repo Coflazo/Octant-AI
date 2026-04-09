@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from datetime import datetime, timezone
-from typing import Any, Callable, Coroutine, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import orjson
 from fastapi import WebSocket
@@ -14,21 +14,13 @@ logger = logging.getLogger(__name__)
 class ConnectionManager:
     """Manages WebSocket connections keyed by session_id.
 
-    Supports connect, disconnect, per-session send, and broadcast.
-    Also routes incoming binary audio chunks to registered handlers
-    for Reson8 voice transcription.
-
     Attributes:
         active_connections: Mapping of session_id to WebSocket instance.
-        audio_handlers: Mapping of session_id to async audio chunk callback.
     """
 
     def __init__(self) -> None:
-        """Initialise empty connection and handler registries."""
+        """Initialise empty connection registry."""
         self.active_connections: Dict[str, WebSocket] = {}
-        self.audio_handlers: Dict[
-            str, Callable[[bytes], Coroutine[Any, Any, None]]
-        ] = {}
 
     async def connect(self, websocket: WebSocket, session_id: str) -> None:
         """Accept an incoming WebSocket and register it for the session.
@@ -67,7 +59,6 @@ class ConnectionManager:
             session_id: The session whose connection should be removed.
         """
         ws = self.active_connections.pop(session_id, None)
-        self.audio_handlers.pop(session_id, None)
         if ws:
             try:
                 await ws.close()
@@ -113,52 +104,9 @@ class ConnectionManager:
             await self.disconnect(session_id)
 
     async def broadcast_pulse(self, pulse_event: dict) -> None:
-        """Broadcast a PULSE event to all active sessions.
-
-        Useful for system-wide announcements. Failed sends trigger
-        per-session disconnect cleanup.
-
-        Args:
-            pulse_event: The PULSE event dict to broadcast.
-        """
+        """Broadcast a PULSE event to all active sessions."""
         for session_id in list(self.active_connections.keys()):
             await self.send_pulse(session_id, pulse_event)
-
-    def register_audio_handler(
-        self,
-        session_id: str,
-        handler: Callable[[bytes], Coroutine[Any, Any, None]],
-    ) -> None:
-        """Register an async callback for incoming audio chunks.
-
-        The voice transcription system uses this to receive mic audio
-        streamed from the browser through the WebSocket.
-
-        Args:
-            session_id: Session to register the handler for.
-            handler: Async function that processes a bytes audio chunk.
-        """
-        self.audio_handlers[session_id] = handler
-        logger.info("Audio handler registered — session_id=%s", session_id)
-
-    async def handle_audio_chunk(self, session_id: str, chunk: bytes) -> None:
-        """Route an audio chunk to the registered handler for a session.
-
-        If no handler is registered, the chunk is silently dropped.
-
-        Args:
-            session_id: Session that sent the audio chunk.
-            chunk: Raw audio bytes from the browser microphone.
-        """
-        handler = self.audio_handlers.get(session_id)
-        if handler:
-            await handler(chunk)
-        else:
-            logger.debug(
-                "No audio handler for session_id=%s — dropping %d bytes",
-                session_id,
-                len(chunk),
-            )
 
 
 class PulseEmitter:
@@ -371,9 +319,7 @@ class PulseEmitter:
     ) -> None:
         """Emit a report section PULSE event.
 
-        Sent as Agent 5 writes each section of the LaTeX report. Called
-        multiple times per section when Gemini streaming is active
-        (is_complete=False for partial, True for final).
+        Sent as Agent 5 writes each section of the LaTeX report.
 
         Args:
             section_name: Name of the report section being written.
@@ -391,30 +337,6 @@ class PulseEmitter:
             },
             message_title=f"Writing: {section_name}",
             message_subtitle="Complete" if is_complete else "Streaming...",
-        )
-        await self.manager.send_pulse(self.session_id, event)
-
-    async def emit_transcription(
-        self, text: str, is_final: bool
-    ) -> None:
-        """Emit a transcription PULSE event from Reson8 voice input.
-
-        Sent as partial words arrive from the speech-to-text engine.
-        When is_final=True, the 2-second silence was detected and
-        the transcription is locked.
-
-        Args:
-            text: The partial or complete transcription text.
-            is_final: Whether this is the final transcription.
-        """
-        payload_type = "transcription_complete" if is_final else "transcription"
-        event = self._build_event(
-            agent="hypothesis_engine",
-            status="active",
-            payload_type=payload_type,
-            payload={"text": text, "is_final": is_final},
-            message_title="Voice input" if not is_final else "Transcription complete",
-            message_subtitle=text[:80],
         )
         await self.manager.send_pulse(self.session_id, event)
 

@@ -5,10 +5,9 @@ import logging
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
-import google.generativeai as genai
-
 from backend.config import get_settings
 from backend.exceptions import PipelineStoppedError
+from backend.llm_provider import get_llm_provider, get_embedding_provider
 from backend.pulse import PulseEmitter
 from backend.session_manager import session_manager
 from backend.agents.hypothesis_engine import HypothesisEngine
@@ -20,10 +19,8 @@ from backend.math_engine.performance import PerformanceReport
 
 logger = logging.getLogger(__name__)
 
-settings = get_settings()
-if settings.GEMINI_API_KEY:
-    genai.configure(api_key=settings.GEMINI_API_KEY)
-gemini_client = genai
+llm_provider = get_llm_provider()
+embedding_provider = get_embedding_provider()
 
 
 @dataclass
@@ -48,11 +45,11 @@ class OctantOrchestrator:
     """Master pipeline coordinator enforcing the 5-agent DAG."""
 
     def __init__(self):
-        self.hypothesis_engine = HypothesisEngine(gemini_client)
-        self.literature_agent = LiteratureAgent(gemini_client)
-        self.universe_builder = UniverseBuilder(gemini_client)
+        self.hypothesis_engine = HypothesisEngine(llm_provider)
+        self.literature_agent = LiteratureAgent(llm_provider, embedding_provider)
+        self.universe_builder = UniverseBuilder(llm_provider)
         self.backtesting_agent = BacktestingAgent()
-        self.report_architect = ReportArchitect(gemini_client)
+        self.report_architect = ReportArchitect(llm_provider)
 
     async def _check_stop(self, session_id: str):
         """Raise PipelineStoppedError if the frontend cancelled this session."""
