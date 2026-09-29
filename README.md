@@ -1,7 +1,9 @@
 <div align="center">
   <img src="assets/Octant_Logo.png" alt="Octant AI Logo" width="200"/>
-  <h1>Octant AI 🐙</h1>
-  <h3>Autonomous Research & Quantitative Analysis Workbench</h3>
+
+# Octant AI 🐙
+
+  <h3>Research & Quantitative Analysis Workbench</h3>
 
 <br/>
 
@@ -22,11 +24,11 @@
 
 <table>
 <tr>
-<td align="center"><b>5 Agents</b><br/><sub>Fully autonomous pipeline</sub></td>
+<td align="center"><b>5 Agents</b><br/><sub>End-to-end pipeline</sub></td>
 <td align="center"><b>18 Math Models</b><br/><sub>GARCH · B-S · PCA · MVO</sub></td>
 <td align="center"><b>12 Data Sources</b><br/><sub>Academic + market + sentiment</sub></td>
 <td align="center"><b>50,000 MC Paths</b><br/><sub>VaR · ES · ruin probability</sub></td>
-<td align="center"><b>IMRaD PDF</b><br/><sub>Goldman-grade LaTeX report</sub></td>
+<td align="center"><b>IMRaD PDF</b><br/><sub>LaTeX research report</sub></td>
 </tr>
 </table>
 
@@ -63,7 +65,7 @@
 
 ## 🐙 What Is Octant AI?
 
-Octant AI is a **privacy-first, autonomous quantitative research workbench**. A quant researcher inputs a natural-language investment thesis spoken via the Reson8 voice API or typed and the system:
+Octant AI is a **privacy-first quantitative research workbench**. You input a natural-language investment thesis, spoken via the Reson8 voice API or typed, and the system:
 
 1. **Decomposes** it into 4–8 independently testable sub-hypotheses using Gemini 2.5 Pro
 2. **Retrieves and analyses** academic literature from 6 sources (arXiv, Semantic Scholar, OpenAlex, SSRN, CORE, Modern Finance)
@@ -92,7 +94,7 @@ A senior quantitative researcher at a hedge fund faces a research cycle that typ
 
 **Octant AI compresses this to under 60 minutes.**
 
-For retail algorithmic traders the 300,000+ users on QuantConnect, Alpaca, and Interactive Brokers the same process takes weeks or never happens at all. Octant AI democratises institutional-grade quantitative research.
+For retail algorithmic traders, the 300,000+ users on QuantConnect, Alpaca, and Interactive Brokers, the same process takes weeks or never happens at all. Octant AI makes this research workflow available to them.
 
 ---
 
